@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Root package for Vercel deployment -- wraps server/src/app.js as a serverless function and builds the client.",
+  "description": "Root package for Vercel deployment -- exposes server/src/app.js directly as a Vercel Node.js function and builds the client.",
   "scripts": {
     "build": "cd client && npm install && npm run build"
   },
@@ -15,7 +15,6 @@
     "express": "^4.22.2",
     "jsonwebtoken": "^9.0.3",
     "multer": "^1.4.5-lts.1",
-    "pg": "^8.23.0",
-    "serverless-http": "^3.2.0"
+    "pg": "^8.23.0"
   }
 }
