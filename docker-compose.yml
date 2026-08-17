@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: keno-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: keno
+      POSTGRES_PASSWORD: keno
+      POSTGRES_DB: keno
+    ports:
+      - "5432:5432"
+    volumes:
+      - keno-pgdata:/var/lib/postgresql/data
+
+volumes:
+  keno-pgdata:
