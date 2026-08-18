@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Button, Modal, Form, Select, InputNumber, message, Descriptions, Table, Popconfirm, Space } from 'antd';
+import { Row, Col, Card, Button, message, Descriptions, Table, Popconfirm, Space } from 'antd';
 import { PlusOutlined, DownloadOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
@@ -8,29 +9,15 @@ import DataTable from '../../components/DataTable.jsx';
 import StatusTag from '../../components/StatusTag.jsx';
 
 export default function InvoicesPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  const [form] = Form.useForm();
 
   const { data: invoices, isLoading } = useQuery({ queryKey: ['invoices'], queryFn: () => api.get('/invoices').then((r) => r.data) });
-  const { data: venues } = useQuery({ queryKey: ['venues'], queryFn: () => api.get('/venues').then((r) => r.data) });
   const { data: detail } = useQuery({
     queryKey: ['invoice', selectedId],
     queryFn: () => api.get(`/invoices/${selectedId}`).then((r) => r.data),
     enabled: !!selectedId,
-  });
-
-  const generateMutation = useMutation({
-    mutationFn: (values) => api.post('/invoices/generate', values),
-    onSuccess: (res) => {
-      message.success('Invoice generated');
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      setCreateOpen(false);
-      form.resetFields();
-      setSelectedId(res.data.id);
-    },
-    onError: (e) => message.error(e.response?.data?.error || 'Failed to generate invoice'),
   });
 
   const finalizeMutation = useMutation({
@@ -77,7 +64,7 @@ export default function InvoicesPage() {
   return (
     <Row gutter={16}>
       <Col span={detail ? 14 : 24}>
-        <Card title="Invoicing & Reconciliation (UC5)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>Generate invoice</Button>}>
+        <Card title="Invoicing & Reconciliation (UC5)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/invoices/new')}>Generate invoice</Button>}>
           <DataTable columns={columns} data={invoices} loading={isLoading} />
         </Card>
       </Col>
@@ -107,20 +94,6 @@ export default function InvoicesPage() {
           </Card>
         </Col>
       )}
-
-      <Modal title="Generate invoice" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} okText="Generate" confirmLoading={generateMutation.isPending}>
-        <Form layout="vertical" form={form} onFinish={(v) => generateMutation.mutate(v)}>
-          <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
-            <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-          </Form.Item>
-          <Form.Item name="periodMonth" label="Month" rules={[{ required: true }]} initialValue={dayjs().month() + 1}>
-            <InputNumber min={1} max={12} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="periodYear" label="Year" rules={[{ required: true }]} initialValue={dayjs().year()}>
-            <InputNumber min={2020} max={2100} style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
     </Row>
   );
 }

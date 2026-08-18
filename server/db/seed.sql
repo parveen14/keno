@@ -44,7 +44,7 @@ INSERT INTO venues (name, code, jurisdiction_id, channel_id, key_account_group_i
 
 -- Users. Shared demo password hash for all accounts: password123
 INSERT INTO users (name, email, password_hash, role, venue_id) VALUES
-  ('Alex Morgan (Admin)', 'admin@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'ADMIN', NULL),
+  ('Melissa Maloney', 'admin@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'ADMIN', NULL),
   ('Jordan Blake (BDM - NSW/QLD)', 'bdm.north@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'BDM', NULL),
   ('Casey Lane (BDM - VIC)', 'bdm.south@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'BDM', NULL),
   ('Morgan Riley (Approver)', 'approver.compliance@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'APPROVER', NULL),

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Button, Modal, Form, Select, InputNumber, Input, DatePicker, message, Typography, Space, List, Popconfirm } from 'antd';
+import { Row, Col, Card, Button, message, Typography, Space, List, Popconfirm } from 'antd';
 import { PlusOutlined, EyeOutlined, BellOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
@@ -8,30 +9,15 @@ import DataTable from '../../components/DataTable.jsx';
 import StatusTag from '../../components/StatusTag.jsx';
 
 export default function CelebrateWinPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  const [form] = Form.useForm();
-  const [editForm] = Form.useForm();
 
   const { data: events, isLoading } = useQuery({ queryKey: ['win-events'], queryFn: () => api.get('/win-events').then((r) => r.data) });
-  const { data: promotions } = useQuery({ queryKey: ['promotions'], queryFn: () => api.get('/promotions').then((r) => r.data) });
-  const { data: venues } = useQuery({ queryKey: ['venues'], queryFn: () => api.get('/venues').then((r) => r.data) });
   const { data: detail } = useQuery({
     queryKey: ['win-event', selectedId],
     queryFn: () => api.get(`/win-events/${selectedId}`).then((r) => r.data),
     enabled: !!selectedId,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (values) => api.post('/win-events', { ...values, winDate: values.winDate.format('YYYY-MM-DD') }),
-    onSuccess: () => {
-      message.success('Win event logged');
-      queryClient.invalidateQueries({ queryKey: ['win-events'] });
-      setCreateOpen(false);
-      form.resetFields();
-    },
   });
 
   const generatePosMutation = useMutation({
@@ -52,17 +38,6 @@ export default function CelebrateWinPage() {
     },
   });
 
-  const editMutation = useMutation({
-    mutationFn: ({ id, values }) => api.put(`/win-events/${id}`, { ...values, winDate: values.winDate.format('YYYY-MM-DD') }),
-    onSuccess: () => {
-      message.success('Win event updated');
-      queryClient.invalidateQueries({ queryKey: ['win-events'] });
-      queryClient.invalidateQueries({ queryKey: ['win-event', selectedId] });
-      setEditing(null);
-    },
-    onError: (e) => message.error(e.response?.data?.error || 'Failed to update'),
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/win-events/${id}`),
     onSuccess: () => {
@@ -72,11 +47,6 @@ export default function CelebrateWinPage() {
     },
     onError: (e) => message.error(e.response?.data?.error || 'Failed to delete'),
   });
-
-  const openEdit = (event) => {
-    setEditing(event);
-    editForm.setFieldsValue({ venueId: event.venue_id, prizeAmount: Number(event.prize_amount), spotNumber: event.spot_number, winDate: dayjs(event.win_date) });
-  };
 
   const columns = [
     { title: 'Venue', dataIndex: 'venue_name', render: (v, r) => <a onClick={() => setSelectedId(r.id)}>{v}</a> },
@@ -89,7 +59,7 @@ export default function CelebrateWinPage() {
       title: '',
       render: (_, r) => (
         <Space>
-          <Button size="small" icon={<EditOutlined />} disabled={r.status !== 'PENDING'} onClick={() => openEdit(r)} />
+          <Button size="small" icon={<EditOutlined />} disabled={r.status !== 'PENDING'} onClick={() => navigate(`/celebrate-win/${r.id}/edit`)} />
           <Popconfirm title="Delete this win event?" onConfirm={() => deleteMutation.mutate(r.id)}>
             <Button size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -101,7 +71,7 @@ export default function CelebrateWinPage() {
   return (
     <Row gutter={16}>
       <Col span={detail ? 14 : 24}>
-        <Card title="Celebrate-a-Win (UC7)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>Log a win</Button>}>
+        <Card title="Celebrate-a-Win (UC7)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/celebrate-win/new')}>Log a win</Button>}>
           <DataTable columns={columns} data={events} loading={isLoading} />
         </Card>
       </Col>
@@ -110,7 +80,7 @@ export default function CelebrateWinPage() {
         <Col span={10}>
           <Card
             title={`${detail.venue_name} — $${Number(detail.prize_amount).toLocaleString()}`}
-            extra={<Space><Button icon={<EditOutlined />} disabled={detail.status !== 'PENDING'} onClick={() => openEdit(detail)}>Edit</Button><Button onClick={() => setSelectedId(null)}>Close</Button></Space>}
+            extra={<Space><Button icon={<EditOutlined />} disabled={detail.status !== 'PENDING'} onClick={() => navigate(`/celebrate-win/${detail.id}/edit`)}>Edit</Button><Button onClick={() => setSelectedId(null)}>Close</Button></Space>}
           >
             <Typography.Paragraph type="secondary">Spot {detail.spot_number} · {dayjs(detail.win_date).format('DD MMM YYYY')} · {detail.promotion_name}</Typography.Paragraph>
 
@@ -144,39 +114,6 @@ export default function CelebrateWinPage() {
           </Card>
         </Col>
       )}
-
-      <Modal title="Log a win" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} okText="Log win">
-        <Form layout="vertical" form={form} onFinish={(v) => createMutation.mutate(v)}>
-          <Form.Item name="promotionId" label="Promotion" rules={[{ required: true }]}>
-            <Select options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
-          </Form.Item>
-          <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
-            <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-          </Form.Item>
-          <Form.Item name="prizeAmount" label="Prize amount" rules={[{ required: true }]}>
-            <InputNumber min={1} style={{ width: '100%' }} prefix="$" />
-          </Form.Item>
-          <Form.Item name="spotNumber" label="Spot number"><Input /></Form.Item>
-          <Form.Item name="winDate" label="Win date" rules={[{ required: true }]} initialValue={dayjs()}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title="Edit win event" open={!!editing} onCancel={() => setEditing(null)} onOk={() => editForm.submit()} okText="Save changes" confirmLoading={editMutation.isPending}>
-        <Form layout="vertical" form={editForm} onFinish={(v) => editMutation.mutate({ id: editing.id, values: v })}>
-          <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
-            <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-          </Form.Item>
-          <Form.Item name="prizeAmount" label="Prize amount" rules={[{ required: true }]}>
-            <InputNumber min={1} style={{ width: '100%' }} prefix="$" />
-          </Form.Item>
-          <Form.Item name="spotNumber" label="Spot number"><Input /></Form.Item>
-          <Form.Item name="winDate" label="Win date" rules={[{ required: true }]}>
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
     </Row>
   );
 }

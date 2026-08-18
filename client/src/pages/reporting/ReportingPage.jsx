@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Tabs, Button, Tag, message, Typography, Modal, Form, Select, Input, List, Space, Popconfirm } from 'antd';
+import { Row, Col, Card, Tabs, Button, Tag, message, Typography, Input, List, Space, Popconfirm } from 'antd';
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
@@ -8,18 +9,14 @@ import DataTable from '../../components/DataTable.jsx';
 import StatusTag from '../../components/StatusTag.jsx';
 
 export default function ReportingPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editingRequest, setEditingRequest] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [commentText, setCommentText] = useState('');
-  const [form] = Form.useForm();
-  const [editForm] = Form.useForm();
 
   const { data: activation, isLoading: loadingActivation } = useQuery({ queryKey: ['activation-report'], queryFn: () => api.get('/reports/activation').then((r) => r.data) });
   const { data: exceptions, isLoading: loadingExceptions } = useQuery({ queryKey: ['exceptions'], queryFn: () => api.get('/reports/exceptions', { params: { resolved: 'false' } }).then((r) => r.data) });
   const { data: supportRequests, isLoading: loadingSupport } = useQuery({ queryKey: ['support-requests'], queryFn: () => api.get('/reports/support-requests').then((r) => r.data) });
-  const { data: venues } = useQuery({ queryKey: ['venues'], queryFn: () => api.get('/venues').then((r) => r.data) });
   const { data: detail } = useQuery({
     queryKey: ['support-request', selectedId],
     queryFn: () => api.get(`/reports/support-requests/${selectedId}`).then((r) => r.data),
@@ -39,16 +36,6 @@ export default function ReportingPage() {
     onSuccess: () => {
       message.success('Exception resolved');
       queryClient.invalidateQueries({ queryKey: ['exceptions'] });
-    },
-  });
-
-  const createRequestMutation = useMutation({
-    mutationFn: (values) => api.post('/reports/support-requests', values),
-    onSuccess: () => {
-      message.success('Support request raised');
-      queryClient.invalidateQueries({ queryKey: ['support-requests'] });
-      setCreateOpen(false);
-      form.resetFields();
     },
   });
 
@@ -73,16 +60,6 @@ export default function ReportingPage() {
     onSuccess: () => {
       message.success('Exception dismissed');
       queryClient.invalidateQueries({ queryKey: ['exceptions'] });
-    },
-  });
-
-  const editRequestMutation = useMutation({
-    mutationFn: ({ id, values }) => api.put(`/reports/support-requests/${id}`, values),
-    onSuccess: () => {
-      message.success('Support request updated');
-      queryClient.invalidateQueries({ queryKey: ['support-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['support-request', selectedId] });
-      setEditingRequest(null);
     },
   });
 
@@ -136,10 +113,7 @@ export default function ReportingPage() {
       title: '',
       render: (_, r) => (
         <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => {
-            setEditingRequest(r);
-            editForm.setFieldsValue({ subject: r.subject, description: r.description, priority: r.priority });
-          }} />
+          <Button size="small" icon={<EditOutlined />} onClick={() => navigate(`/reporting/support-requests/${r.id}/edit`)} />
           <Popconfirm title="Delete this support request?" onConfirm={() => deleteRequestMutation.mutate(r.id)}>
             <Button size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -175,7 +149,7 @@ export default function ReportingPage() {
             <Row gutter={16}>
               <Col span={detail ? 14 : 24}>
                 <div style={{ marginBottom: 12, textAlign: 'right' }}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>Raise request</Button>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/reporting/support-requests/new')}>Raise request</Button>
                 </div>
                 <DataTable columns={supportColumns} data={supportRequests} loading={loadingSupport} />
               </Col>
@@ -185,10 +159,7 @@ export default function ReportingPage() {
                     title={detail.subject}
                     extra={(
                       <Space>
-                        <Button icon={<EditOutlined />} onClick={() => {
-                          setEditingRequest(detail);
-                          editForm.setFieldsValue({ subject: detail.subject, description: detail.description, priority: detail.priority });
-                        }}>Edit</Button>
+                        <Button icon={<EditOutlined />} onClick={() => navigate(`/reporting/support-requests/${detail.id}/edit`)}>Edit</Button>
                         <Button onClick={() => setSelectedId(null)}>Close</Button>
                       </Space>
                     )}
@@ -212,29 +183,6 @@ export default function ReportingPage() {
           ),
         },
       ]} />
-
-      <Modal title="Raise support request" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} okText="Raise">
-        <Form layout="vertical" form={form} onFinish={(v) => createRequestMutation.mutate(v)}>
-          <Form.Item name="subject" label="Subject" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="description" label="Description"><Input.TextArea rows={3} /></Form.Item>
-          <Form.Item name="venueId" label="Venue">
-            <Select allowClear showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-          </Form.Item>
-          <Form.Item name="priority" label="Priority" initialValue="MEDIUM">
-            <Select options={['LOW', 'MEDIUM', 'HIGH'].map((p) => ({ value: p, label: p }))} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title="Edit support request" open={!!editingRequest} onCancel={() => setEditingRequest(null)} onOk={() => editForm.submit()} okText="Save changes" confirmLoading={editRequestMutation.isPending}>
-        <Form layout="vertical" form={editForm} onFinish={(v) => editRequestMutation.mutate({ id: editingRequest.id, values: v })}>
-          <Form.Item name="subject" label="Subject" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="description" label="Description"><Input.TextArea rows={3} /></Form.Item>
-          <Form.Item name="priority" label="Priority">
-            <Select options={['LOW', 'MEDIUM', 'HIGH'].map((p) => ({ value: p, label: p }))} />
-          </Form.Item>
-        </Form>
-      </Modal>
     </Card>
   );
 }

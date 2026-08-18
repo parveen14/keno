@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Tabs, Table, Rate, Form, Select, Switch, Input, Button, message, Typography, Space, Modal, DatePicker, Popconfirm } from 'antd';
+import { Row, Col, Card, Tabs, Table, Rate, Form, Select, Switch, Input, Button, message, Typography, Space, Popconfirm } from 'antd';
 import { DownloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
@@ -9,17 +10,13 @@ import { useAuth } from '../../auth/AuthContext.jsx';
 
 export default function RatingsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
-  const [createSurveyOpen, setCreateSurveyOpen] = useState(false);
-  const [editingSurvey, setEditingSurvey] = useState(null);
-  const [surveyForm] = Form.useForm();
-  const [editSurveyForm] = Form.useForm();
   const [viewingSurveyId, setViewingSurveyId] = useState(null);
 
   const { data: surveys } = useQuery({ queryKey: ['promotion-surveys'], queryFn: () => api.get('/promotion-ratings/surveys').then((r) => r.data) });
   const { data: insights, isLoading } = useQuery({ queryKey: ['ratings-insights'], queryFn: () => api.get('/promotion-ratings/insights').then((r) => r.data) });
-  const { data: promotions } = useQuery({ queryKey: ['promotions'], queryFn: () => api.get('/promotions').then((r) => r.data) });
   const { data: surveyRatings } = useQuery({
     queryKey: ['survey-ratings', viewingSurveyId],
     queryFn: () => api.get(`/promotion-ratings/surveys/${viewingSurveyId}/ratings`).then((r) => r.data),
@@ -35,34 +32,6 @@ export default function RatingsPage() {
       form.resetFields();
     },
     onError: (e) => message.error(e.response?.data?.error || 'Failed to submit'),
-  });
-
-  const createSurveyMutation = useMutation({
-    mutationFn: (values) => api.post('/promotion-ratings/surveys', {
-      promotionId: values.promotionId,
-      opensAt: values.dates[0].toISOString(),
-      closesAt: values.dates[1].toISOString(),
-      isRequired: values.isRequired,
-    }),
-    onSuccess: () => {
-      message.success('Survey created');
-      queryClient.invalidateQueries({ queryKey: ['promotion-surveys'] });
-      setCreateSurveyOpen(false);
-      surveyForm.resetFields();
-    },
-  });
-
-  const editSurveyMutation = useMutation({
-    mutationFn: ({ id, values }) => api.put(`/promotion-ratings/surveys/${id}`, {
-      opensAt: values.dates[0].toISOString(),
-      closesAt: values.dates[1].toISOString(),
-      isRequired: values.isRequired,
-    }),
-    onSuccess: () => {
-      message.success('Survey updated');
-      queryClient.invalidateQueries({ queryKey: ['promotion-surveys'] });
-      setEditingSurvey(null);
-    },
   });
 
   const deleteSurveyMutation = useMutation({
@@ -116,10 +85,7 @@ export default function RatingsPage() {
       title: '',
       render: (_, r) => (
         <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => {
-            setEditingSurvey(r);
-            editSurveyForm.setFieldsValue({ dates: [dayjs(r.opens_at), dayjs(r.closes_at)], isRequired: r.is_required });
-          }} />
+          <Button size="small" icon={<EditOutlined />} onClick={() => navigate(`/ratings/surveys/${r.id}/edit`)} />
           <Popconfirm title="Delete this survey and all its responses?" onConfirm={() => deleteSurveyMutation.mutate(r.id)}>
             <Button size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -185,7 +151,7 @@ export default function RatingsPage() {
             <Row gutter={16}>
               <Col span={viewingSurveyId ? 14 : 24}>
                 <div style={{ textAlign: 'right', marginBottom: 12 }}>
-                  <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateSurveyOpen(true)}>New survey</Button>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/ratings/surveys/new')}>New survey</Button>
                 </div>
                 <DataTable columns={surveyColumns} data={surveys} />
               </Col>
@@ -219,27 +185,6 @@ export default function RatingsPage() {
           ),
         },
       ]} />
-
-      <Modal title="New survey" open={createSurveyOpen} onCancel={() => setCreateSurveyOpen(false)} onOk={() => surveyForm.submit()} okText="Create" confirmLoading={createSurveyMutation.isPending}>
-        <Form layout="vertical" form={surveyForm} onFinish={(v) => createSurveyMutation.mutate(v)}>
-          <Form.Item name="promotionId" label="Promotion" rules={[{ required: true }]}>
-            <Select showSearch optionFilterProp="label" options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
-          </Form.Item>
-          <Form.Item name="dates" label="Survey window" rules={[{ required: true }]}>
-            <DatePicker.RangePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="isRequired" label="Required" valuePropName="checked"><Switch /></Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title="Edit survey" open={!!editingSurvey} onCancel={() => setEditingSurvey(null)} onOk={() => editSurveyForm.submit()} okText="Save changes" confirmLoading={editSurveyMutation.isPending}>
-        <Form layout="vertical" form={editSurveyForm} onFinish={(v) => editSurveyMutation.mutate({ id: editingSurvey.id, values: v })}>
-          <Form.Item name="dates" label="Survey window" rules={[{ required: true }]}>
-            <DatePicker.RangePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="isRequired" label="Required" valuePropName="checked"><Switch /></Form.Item>
-        </Form>
-      </Modal>
     </Card>
   );
 }

@@ -1,26 +1,20 @@
 import React, { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Button, Modal, Form, Input, DatePicker, Select, InputNumber, message, Typography, Table, Tag, Progress, Space, Popconfirm } from 'antd';
+import { Row, Col, Card, Button, Select, message, Typography, Table, Tag, Progress, Space, Popconfirm } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
 import api from '../../lib/api.js';
 import DataTable from '../../components/DataTable.jsx';
 
 const ELIGIBILITY_COLOR = { INVITED: 'default', OPTED_IN: 'green', OPTED_OUT: 'red' };
 
 export default function VenueGroupsPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [form] = Form.useForm();
-  const [editForm] = Form.useForm();
-  const [addMemberForm] = Form.useForm();
+  const [searchParams] = useSearchParams();
+  const [selectedId, setSelectedId] = useState(searchParams.get('selected') || null);
 
   const { data: groups, isLoading } = useQuery({ queryKey: ['venue-groups'], queryFn: () => api.get('/venue-groups').then((r) => r.data) });
-  const { data: promotions } = useQuery({ queryKey: ['promotions'], queryFn: () => api.get('/promotions').then((r) => r.data) });
-  const { data: venues } = useQuery({ queryKey: ['venues'], queryFn: () => api.get('/venues').then((r) => r.data) });
 
   const { data: detail } = useQuery({
     queryKey: ['venue-group', selectedId],
@@ -31,21 +25,6 @@ export default function VenueGroupsPage() {
     queryKey: ['venue-group-report', selectedId],
     queryFn: () => api.get(`/venue-groups/${selectedId}/report`).then((r) => r.data),
     enabled: !!selectedId,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (values) => api.post('/venue-groups', {
-      ...values,
-      startDate: values.dates?.[0]?.format('YYYY-MM-DD'),
-      endDate: values.dates?.[1]?.format('YYYY-MM-DD'),
-    }),
-    onSuccess: () => {
-      message.success('Venue group created');
-      queryClient.invalidateQueries({ queryKey: ['venue-groups'] });
-      setCreateOpen(false);
-      form.resetFields();
-    },
-    onError: (e) => message.error(e.response?.data?.error || 'Failed to create group'),
   });
 
   const eligibilityMutation = useMutation({
@@ -63,17 +42,6 @@ export default function VenueGroupsPage() {
     queryClient.invalidateQueries({ queryKey: ['venue-groups'] });
   };
 
-  const editMutation = useMutation({
-    mutationFn: ({ id, values }) => api.put(`/venue-groups/${id}`, {
-      name: values.name,
-      maxVenues: values.maxVenues,
-      startDate: values.dates?.[0]?.format('YYYY-MM-DD'),
-      endDate: values.dates?.[1]?.format('YYYY-MM-DD'),
-    }),
-    onSuccess: () => { message.success('Venue group updated'); invalidateGroup(); setEditing(null); },
-    onError: (e) => message.error(e.response?.data?.error || 'Failed to update'),
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/venue-groups/${id}`),
     onSuccess: () => {
@@ -82,11 +50,6 @@ export default function VenueGroupsPage() {
       setSelectedId(null);
     },
     onError: (e) => message.error(e.response?.data?.error || 'Failed to delete'),
-  });
-
-  const addMemberMutation = useMutation({
-    mutationFn: (venueId) => api.post(`/venue-groups/${selectedId}/members`, { venueId }),
-    onSuccess: () => { message.success('Venue invited'); invalidateGroup(); setAddMemberOpen(false); addMemberForm.resetFields(); },
   });
 
   const removeMemberMutation = useMutation({
@@ -106,10 +69,7 @@ export default function VenueGroupsPage() {
       title: '',
       render: (_, r) => (
         <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => {
-            setEditing(r);
-            editForm.setFieldsValue({ name: r.name, maxVenues: r.max_venues, dates: r.start_date ? [dayjs(r.start_date), dayjs(r.end_date)] : undefined });
-          }} />
+          <Button size="small" icon={<EditOutlined />} onClick={() => navigate(`/venue-groups/${r.id}/edit`)} />
           <Popconfirm title="Delete this venue group?" onConfirm={() => deleteMutation.mutate(r.id)}>
             <Button size="small" danger icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -153,7 +113,7 @@ export default function VenueGroupsPage() {
   return (
     <Row gutter={16}>
       <Col span={detail ? 14 : 24}>
-        <Card title="Venue Groups (UC3)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>New group</Button>}>
+        <Card title="Venue Groups (UC3)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/venue-groups/new')}>New group</Button>}>
           <DataTable columns={columns} data={groups} loading={isLoading} />
         </Card>
       </Col>
@@ -164,7 +124,7 @@ export default function VenueGroupsPage() {
             <Typography.Text type="secondary">Linked promotion: {detail.promotion_name || '—'}</Typography.Text>
             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography.Title level={5} style={{ margin: 0 }}>Members & eligibility</Typography.Title>
-              <Button size="small" icon={<PlusOutlined />} onClick={() => setAddMemberOpen(true)}>Invite venue</Button>
+              <Button size="small" icon={<PlusOutlined />} onClick={() => navigate(`/venue-groups/${detail.id}/invite`)}>Invite venue</Button>
             </div>
             <Table rowKey="id" size="small" pagination={false} columns={memberColumns} dataSource={detail.members} style={{ marginTop: 8 }} />
 
@@ -173,36 +133,6 @@ export default function VenueGroupsPage() {
           </Card>
         </Col>
       )}
-
-      <Modal title="New venue group" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => form.submit()} okText="Create" confirmLoading={createMutation.isPending}>
-        <Form layout="vertical" form={form} onFinish={(v) => createMutation.mutate(v)} initialValues={{ maxVenues: 10 }}>
-          <Form.Item name="name" label="Group name" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="promotionId" label="Linked promotion">
-            <Select allowClear options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
-          </Form.Item>
-          <Form.Item name="maxVenues" label="Max venues"><InputNumber min={1} max={50} /></Form.Item>
-          <Form.Item name="dates" label="Window"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="venueIds" label="Invite venues">
-            <Select mode="multiple" showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title={`Edit: ${editing?.name || ''}`} open={!!editing} onCancel={() => setEditing(null)} onOk={() => editForm.submit()} okText="Save changes" confirmLoading={editMutation.isPending}>
-        <Form layout="vertical" form={editForm} onFinish={(v) => editMutation.mutate({ id: editing.id, values: v })}>
-          <Form.Item name="name" label="Group name" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="maxVenues" label="Max venues"><InputNumber min={1} max={50} /></Form.Item>
-          <Form.Item name="dates" label="Window"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title="Invite a venue" open={addMemberOpen} onCancel={() => setAddMemberOpen(false)} onOk={() => addMemberForm.submit()} okText="Invite" confirmLoading={addMemberMutation.isPending}>
-        <Form layout="vertical" form={addMemberForm} onFinish={(v) => addMemberMutation.mutate(v.venueId)}>
-          <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
-            <Select showSearch optionFilterProp="label" options={venues?.filter((v) => !detail?.members?.some((m) => m.venue_id === v.id)).map((v) => ({ value: v.id, label: v.name }))} />
-          </Form.Item>
-        </Form>
-      </Modal>
     </Row>
   );
 }

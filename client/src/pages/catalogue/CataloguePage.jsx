@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Select, Input, Button, Modal, Form, InputNumber, message, Tag, Typography, Alert, List, Space, Popconfirm, Empty } from 'antd';
+import { Row, Col, Card, Select, Input, Button, Form, InputNumber, message, Tag, Typography, Alert, List, Space, Popconfirm, Empty } from 'antd';
 import { ShoppingCartOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
-import FileUploadField from '../../components/FileUploadField.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
 
 export default function CataloguePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [category, setCategory] = useState();
   const [orderItem, setOrderItem] = useState(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
-  const [createForm] = Form.useForm();
-  const [editForm] = Form.useForm();
 
   const { data: items, isLoading } = useQuery({ queryKey: ['catalogue', category], queryFn: () => api.get('/catalogue', { params: { category } }).then((r) => r.data) });
   const { data: categories } = useQuery({ queryKey: ['catalogue-categories'], queryFn: () => api.get('/catalogue/categories').then((r) => r.data) });
@@ -38,28 +35,6 @@ export default function CataloguePage() {
     onError: (e) => message.error(e.response?.data?.error || 'Failed to place order'),
   });
 
-  const createMutation = useMutation({
-    mutationFn: (values) => api.post('/catalogue', values),
-    onSuccess: () => {
-      message.success('Catalogue item created');
-      queryClient.invalidateQueries({ queryKey: ['catalogue'] });
-      queryClient.invalidateQueries({ queryKey: ['catalogue-categories'] });
-      setCreateOpen(false);
-      createForm.resetFields();
-    },
-    onError: (e) => message.error(e.response?.data?.error || 'Failed to create item'),
-  });
-
-  const editMutation = useMutation({
-    mutationFn: ({ id, values }) => api.put(`/catalogue/${id}`, values),
-    onSuccess: () => {
-      message.success('Catalogue item updated');
-      queryClient.invalidateQueries({ queryKey: ['catalogue'] });
-      setEditing(null);
-    },
-    onError: (e) => message.error(e.response?.data?.error || 'Failed to update item'),
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/catalogue/${id}`),
     onSuccess: () => {
@@ -71,18 +46,10 @@ export default function CataloguePage() {
 
   const TIER_COLOR = { Bronze: '#a1662f', Silver: '#8c8c8c', Gold: '#d4af37', Platinum: '#5b8def' };
 
-  const openEdit = (r) => {
-    setEditing(r);
-    editForm.setFieldsValue({
-      name: r.name, description: r.description, category: r.category, tier: r.tier,
-      unitPrice: Number(r.unit_price), isActive: r.is_active, imageUrl: r.image_url,
-    });
-  };
-
   return (
     <Row gutter={16}>
       <Col span={orderItem ? 16 : 24}>
-        <Card title="Prize Catalogue (UC8)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>New item</Button>}>
+        <Card title="Prize Catalogue (UC8)" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/catalogue/new')}>New item</Button>}>
           <Select
             style={{ width: 220, marginBottom: 16 }} placeholder="Filter by category" allowClear
             value={category} onChange={setCategory}
@@ -118,7 +85,7 @@ export default function CataloguePage() {
                   {(Number(r.available_qty) > 0 || r.substitutes?.length > 0) && (
                     <Button size="small" icon={<ShoppingCartOutlined />} onClick={() => setOrderItem(r)}>{Number(r.available_qty) > 0 ? 'Order' : 'Substitute'}</Button>
                   )}
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
+                  <Button size="small" icon={<EditOutlined />} onClick={() => navigate(`/catalogue/${r.id}/edit`)} />
                   <Popconfirm title="Delete this catalogue item?" onConfirm={() => deleteMutation.mutate(r.id)}>
                     <Button size="small" danger icon={<DeleteOutlined />} />
                   </Popconfirm>
@@ -169,38 +136,6 @@ export default function CataloguePage() {
           </Card>
         </Col>
       )}
-
-      <Modal title="New catalogue item" open={createOpen} onCancel={() => setCreateOpen(false)} onOk={() => createForm.submit()} okText="Create" confirmLoading={createMutation.isPending}>
-        <Form layout="vertical" form={createForm} onFinish={(v) => createMutation.mutate(v)}>
-          <Form.Item name="sku" label="SKU" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="description" label="Description"><Input.TextArea rows={2} /></Form.Item>
-          <Form.Item name="category" label="Category" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="tier" label="Tier" rules={[{ required: true }]}>
-            <Select options={['Bronze', 'Silver', 'Gold', 'Platinum'].map((t) => ({ value: t, label: t }))} />
-          </Form.Item>
-          <Form.Item name="unitPrice" label="Unit price" rules={[{ required: true }]}>
-            <InputNumber min={0} style={{ width: '100%' }} prefix="$" />
-          </Form.Item>
-          <Form.Item name="imageUrl" label="Product image"><FileUploadField accept="image/*" buttonText="Upload image" /></Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal title={`Edit: ${editing?.name || ''}`} open={!!editing} onCancel={() => setEditing(null)} onOk={() => editForm.submit()} okText="Save changes" confirmLoading={editMutation.isPending}>
-        <Form layout="vertical" form={editForm} onFinish={(v) => editMutation.mutate({ id: editing.id, values: v })}>
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="description" label="Description"><Input.TextArea rows={2} /></Form.Item>
-          <Form.Item name="category" label="Category" rules={[{ required: true }]}><Input /></Form.Item>
-          <Form.Item name="tier" label="Tier" rules={[{ required: true }]}>
-            <Select options={['Bronze', 'Silver', 'Gold', 'Platinum'].map((t) => ({ value: t, label: t }))} />
-          </Form.Item>
-          <Form.Item name="unitPrice" label="Unit price" rules={[{ required: true }]}>
-            <InputNumber min={0} style={{ width: '100%' }} prefix="$" />
-          </Form.Item>
-          <Form.Item name="imageUrl" label="Product image"><FileUploadField accept="image/*" buttonText="Upload image" /></Form.Item>
-          <Form.Item name="isActive" label="Active"><Select options={[{ value: true, label: 'Active' }, { value: false, label: 'Inactive' }]} /></Form.Item>
-        </Form>
-      </Modal>
     </Row>
   );
 }
