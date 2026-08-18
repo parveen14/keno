@@ -143,14 +143,16 @@ export async function previewPos(posId) {
     }
     .poster {
       position: relative; width: 440px; overflow: hidden; color: #fff; text-align: center;
-      background: linear-gradient(160deg, #009fe3 0%, #522583 100%);
+      background:
+        radial-gradient(ellipse 120% 60% at 50% 0%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, #00aeef 0%, #0075bf 40%, #4b2e83 100%);
       border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
-      padding: 36px 30px 0;
+      padding: 40px 30px 0;
     }
     .confetti { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .85; }
     .content { position: relative; z-index: 1; }
-    .logo-row { display: flex; align-items: center; justify-content: center; margin-bottom: 26px; }
-    .logo-row img { height: 34px; }
+    .logo-row { display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
+    .logo-row img { height: 64px; }
     .headline {
       font-size: 46px; font-weight: 800; line-height: 1.02; margin: 0 0 10px;
       text-transform: uppercase; letter-spacing: .5px; text-shadow: 0 2px 12px rgba(0,0,0,.15);
