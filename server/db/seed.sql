@@ -261,6 +261,9 @@ INSERT INTO prize_catalogue_items (sku, name, category, tier, unit_price) VALUES
   ('APP-PUFFER-01', 'Branded Puffer Jacket', 'Apparel', 'Silver', 89.00),
   ('APP-BAG-01', 'Leather Weekend Bag', 'Apparel', 'Gold', 199.00);
 
+-- Points price defaults to 10 points per dollar (matches the loyalty-catalogue reference: "1,500 points - RRP $129.00").
+UPDATE prize_catalogue_items SET points_value = round(unit_price * 10);
+
 -- Prize picks for the "Ballarat Club Winter Prize Giveaway" demo prize campaign (inserted here,
 -- not alongside the promotion itself, since it needs prize_catalogue_items to already exist).
 INSERT INTO promotion_prizes (promotion_id, prize_catalogue_item_id, slot_label, sort_order)

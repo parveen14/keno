@@ -25,13 +25,20 @@ export async function listCatalogue({ category, tier, search } = {}) {
   let substitutesByItem = {};
   if (lowStockIds.length) {
     const { rows: subs } = await query(
-      `SELECT so.prize_catalogue_item_id, s.id, s.name, s.sku, s.unit_price
-       FROM substitution_options so JOIN prize_catalogue_items s ON s.id = so.substitute_item_id
-       WHERE so.prize_catalogue_item_id = ANY($1)`,
+      `SELECT so.prize_catalogue_item_id, s.id, s.name, s.sku, s.unit_price, s.points_value, s.image_url,
+              COALESCE(SUM(ws.soh_qty - ws.committed_qty), 0) AS available_qty
+       FROM substitution_options so
+       JOIN prize_catalogue_items s ON s.id = so.substitute_item_id
+       LEFT JOIN warehouse_stock ws ON ws.prize_catalogue_item_id = s.id
+       WHERE so.prize_catalogue_item_id = ANY($1)
+       GROUP BY so.prize_catalogue_item_id, s.id`,
       [lowStockIds]
     );
     substitutesByItem = subs.reduce((acc, s) => {
-      (acc[s.prize_catalogue_item_id] ||= []).push({ id: s.id, name: s.name, sku: s.sku, unitPrice: s.unit_price });
+      (acc[s.prize_catalogue_item_id] ||= []).push({
+        id: s.id, name: s.name, sku: s.sku, unitPrice: s.unit_price, pointsValue: s.points_value,
+        imageUrl: s.image_url, availableQty: Number(s.available_qty),
+      });
       return acc;
     }, {});
   }
@@ -59,10 +66,11 @@ export async function listCategories() {
 }
 
 export async function createCatalogueItem(data, userId) {
-  const { sku, name, description, category, tier, unitPrice, imageUrl } = data;
+  const { sku, name, description, category, tier, unitPrice, imageUrl, pointsValue } = data;
   const { rows } = await query(
-    `INSERT INTO prize_catalogue_items (sku, name, description, category, tier, unit_price, image_url) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [sku, name, description ?? null, category, tier, unitPrice, imageUrl ?? null]
+    `INSERT INTO prize_catalogue_items (sku, name, description, category, tier, unit_price, image_url, points_value)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [sku, name, description ?? null, category, tier, unitPrice, imageUrl ?? null, pointsValue ?? Math.round(unitPrice * 10)]
   );
   await writeAuditLog({ tableName: 'prize_catalogue_items', recordId: rows[0].id, action: 'INSERT', changedBy: userId, newData: rows[0] });
   return rows[0];
@@ -71,13 +79,13 @@ export async function createCatalogueItem(data, userId) {
 export async function updateCatalogueItem(id, data, userId) {
   const existing = (await query('SELECT * FROM prize_catalogue_items WHERE id = $1', [id])).rows[0];
   if (!existing) throw Object.assign(new Error('Item not found'), { status: 404 });
-  const { name, description, category, tier, unitPrice, isActive, imageUrl } = data;
+  const { name, description, category, tier, unitPrice, isActive, imageUrl, pointsValue } = data;
   const { rows } = await query(
     `UPDATE prize_catalogue_items SET name = COALESCE($2, name), description = COALESCE($3, description),
        category = COALESCE($4, category), tier = COALESCE($5, tier), unit_price = COALESCE($6, unit_price),
-       is_active = COALESCE($7, is_active), image_url = COALESCE($8, image_url)
+       is_active = COALESCE($7, is_active), image_url = COALESCE($8, image_url), points_value = COALESCE($9, points_value)
      WHERE id = $1 RETURNING *`,
-    [id, name ?? null, description ?? null, category ?? null, tier ?? null, unitPrice ?? null, isActive ?? null, imageUrl ?? null]
+    [id, name ?? null, description ?? null, category ?? null, tier ?? null, unitPrice ?? null, isActive ?? null, imageUrl ?? null, pointsValue ?? null]
   );
   await writeAuditLog({ tableName: 'prize_catalogue_items', recordId: id, action: 'UPDATE', changedBy: userId, oldData: existing, newData: rows[0] });
   return rows[0];

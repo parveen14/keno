@@ -23,7 +23,7 @@ export default function CatalogueItemFormPage() {
     if (isEdit && existing) {
       form.setFieldsValue({
         name: existing.name, description: existing.description, category: existing.category, tier: existing.tier,
-        unitPrice: Number(existing.unit_price), isActive: existing.is_active, imageUrl: existing.image_url,
+        unitPrice: Number(existing.unit_price), pointsValue: existing.points_value, isActive: existing.is_active, imageUrl: existing.image_url,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,6 +72,9 @@ export default function CatalogueItemFormPage() {
         </Form.Item>
         <Form.Item name="unitPrice" label="Unit price" rules={[{ required: true }]}>
           <InputNumber min={0} style={{ width: '100%' }} prefix="$" />
+        </Form.Item>
+        <Form.Item name="pointsValue" label="Points price" tooltip="Shown in the catalogue/cart as the redeemable points cost. Defaults to 10x the unit price if left blank.">
+          <InputNumber min={0} style={{ width: '100%' }} placeholder="Auto (10x unit price)" />
         </Form.Item>
         <Form.Item name="imageUrl" label="Product image"><FileUploadField accept="image/*" buttonText="Upload image" /></Form.Item>
         {isEdit && (

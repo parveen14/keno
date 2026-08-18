@@ -303,6 +303,8 @@ CREATE TABLE prize_catalogue_items (
   category text NOT NULL,
   tier text NOT NULL,
   unit_price numeric(10,2) NOT NULL,
+  -- Loyalty-points price shown alongside RRP in the catalogue/cart (10 points per dollar by default).
+  points_value int NOT NULL DEFAULT 0,
   image_url text,
   is_active boolean NOT NULL DEFAULT true
 );
@@ -372,6 +374,7 @@ CREATE TABLE order_items (
   prize_catalogue_item_id uuid NOT NULL REFERENCES prize_catalogue_items(id),
   quantity int NOT NULL,
   unit_price numeric(10,2) NOT NULL,
+  points_value int NOT NULL DEFAULT 0,
   warehouse_id uuid REFERENCES warehouses(id)
 );
 
@@ -391,7 +394,7 @@ CREATE TABLE warehouse_dispatches (
   quantity int NOT NULL,
   consignment_ref text,
   courier_name text,
-  status text NOT NULL DEFAULT 'PACKED' CHECK (status IN ('PACKED','SHIPPED','DELIVERED')),
+  status text NOT NULL DEFAULT 'PACKED' CHECK (status IN ('PACKED','SHIPPED','OUT_FOR_DELIVERY','DELIVERED')),
   tracking_events jsonb NOT NULL DEFAULT '[]',
   dispatched_at timestamptz
 );
