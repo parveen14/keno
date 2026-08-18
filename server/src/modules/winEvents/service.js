@@ -83,9 +83,11 @@ export async function generatePos(winEventId, format, userId) {
 
   const snapshot = {
     venue_name: event.venue_name,
-    win_date: dayjs(event.win_date).format('DD MMMM YYYY'),
-    prize_amount: Number(event.prize_amount).toLocaleString('en-AU', { style: 'currency', currency: 'AUD' }),
-    spot_number: event.spot_number || '—',
+    win_date: dayjs(event.win_date).format('D MMMM YYYY'),
+    prize_amount: Number(event.prize_amount).toLocaleString('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }),
+    spot_number: event.spot_number || null,
+    win_type: event.win_type,
+    product_name: event.product_name || null,
     rg_messaging_line: event.default_rg_text,
   };
 
@@ -98,29 +100,97 @@ export async function generatePos(winEventId, format, userId) {
   return rows[0];
 }
 
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function headlineFor(winType) {
+  const t = (winType || '').toLowerCase();
+  if (t.includes('major')) return 'MAJOR WIN';
+  if (t.includes('podium') || t.includes('1st')) return 'PODIUM WIN';
+  if (t.includes('recurring')) return 'WEEKLY WIN';
+  if (t.includes('standard')) return 'BIG WIN';
+  return 'CELEBRATE A WIN';
+}
+
+const CONFETTI_COLORS = ['#ec008c', '#f04e23', '#fff200', '#00853a', '#00aeef', '#522e91'];
+function confettiSvg() {
+  const seeds = [
+    [8, 6], [92, 4], [18, 16], [80, 12], [50, 3], [4, 30], [96, 26], [65, 8],
+    [30, 5], [45, 20], [12, 22], [88, 18], [58, 14], [22, 9], [72, 22], [38, 11],
+  ];
+  const shapes = seeds.map(([x, y], i) => {
+    const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    return i % 3 === 0
+      ? `<circle cx="${x}%" cy="${y}%" r="5" fill="${color}" />`
+      : `<rect x="${x}%" y="${y}%" width="9" height="9" fill="${color}" transform="rotate(${(i * 37) % 360} ${x} ${y})" />`;
+  }).join('');
+  return `<svg class="confetti" viewBox="0 0 100 100" preserveAspectRatio="none">${shapes}</svg>`;
+}
+
 export async function previewPos(posId) {
   const pos = (await query('SELECT * FROM pos_generations WHERE id = $1', [posId])).rows[0];
   if (!pos) throw Object.assign(new Error('POS not found'), { status: 404 });
   await query('UPDATE pos_generations SET previewed_at = now() WHERE id = $1', [posId]);
   const s = pos.template_field_snapshot;
+  const headline = headlineFor(s.win_type);
+  const badge = s.spot_number ? `${esc(s.spot_number)} Spot Jackpot` : (s.product_name ? esc(s.product_name) : null);
+
   return `<!doctype html><html><head><meta charset="utf-8"><title>Celebrate-a-Win POS</title>
   <style>
-    body { font-family: Georgia, serif; background:#0f4c81; margin:0; padding:40px; display:flex; justify-content:center; }
-    .card { background:#fff; border-radius:12px; padding:48px; width:520px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.3); }
-    h1 { color:#0f4c81; font-size:20px; letter-spacing:2px; text-transform:uppercase; }
-    .prize { font-size:48px; color:#c9a227; font-weight:bold; margin:16px 0; }
-    .venue { font-size:24px; margin-bottom:4px; }
-    .meta { color:#555; margin-bottom:24px; }
-    .rg { font-size:11px; color:#888; border-top:1px solid #eee; margin-top:32px; padding-top:16px; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #1a1a2e; display: flex; justify-content: center; padding: 32px 16px;
+    }
+    .poster {
+      position: relative; width: 440px; overflow: hidden; color: #fff; text-align: center;
+      background: linear-gradient(160deg, #009fe3 0%, #522583 100%);
+      border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      padding: 36px 30px 0;
+    }
+    .confetti { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .85; }
+    .content { position: relative; z-index: 1; }
+    .logo-row { display: flex; align-items: center; justify-content: center; margin-bottom: 26px; }
+    .logo-row img { height: 34px; }
+    .headline {
+      font-size: 46px; font-weight: 800; line-height: 1.02; margin: 0 0 10px;
+      text-transform: uppercase; letter-spacing: .5px; text-shadow: 0 2px 12px rgba(0,0,0,.15);
+    }
+    .amount { font-size: 58px; font-weight: 800; margin: 0 0 18px; letter-spacing: -1px; }
+    .venue { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+    .date { font-size: 14px; opacity: .9; margin-bottom: 22px; }
+    .badge {
+      display: inline-block; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.5);
+      padding: 8px 22px; border-radius: 999px; font-weight: 700; font-size: 14px; margin-bottom: 28px;
+    }
+    .illustration {
+      background: #fff; height: 150px; margin: 0 -30px; border-radius: 50% 50% 0 0 / 40% 40% 0 0;
+      display: flex; align-items: center; justify-content: center; font-size: 44px; letter-spacing: 6px;
+    }
+    .tagline {
+      font-weight: 800; font-style: italic; font-size: 19px; margin: 22px 0 14px; position: relative; z-index: 1;
+    }
+    .rg {
+      font-size: 10px; opacity: .85; line-height: 1.5; padding: 0 4px 22px; position: relative; z-index: 1;
+    }
+    .meta-row { font-size: 11px; opacity: .7; padding-bottom: 10px; position: relative; z-index: 1; }
   </style></head>
-  <body><div class="card">
-    <h1>Celebrate a Win</h1>
-    <div class="venue">${s.venue_name}</div>
-    <div class="meta">Spot ${s.spot_number} &middot; ${s.win_date}</div>
-    <div class="prize">${s.prize_amount}</div>
-    <div class="meta">Format: ${pos.format === 'PRINT_PDF' ? 'Print-ready' : 'Digital'}</div>
-    <div class="rg">${s.rg_messaging_line}</div>
-  </div></body></html>`;
+  <body>
+    <div class="poster">
+      ${confettiSvg()}
+      <div class="content">
+        <div class="logo-row"><img src="/brand/keno-logo-reversed.png" alt="Keno" /></div>
+        <div class="headline">${headline}</div>
+        <div class="amount">${esc(s.prize_amount)}</div>
+        <div class="venue">${esc(s.venue_name)}</div>
+        <div class="date">${esc(s.win_date)}</div>
+        ${badge ? `<div class="badge">${badge}</div>` : ''}
+      </div>
+      <div class="illustration">🎉🙌🎊</div>
+      <div class="tagline">Could you be next?</div>
+      <div class="rg">${esc(s.rg_messaging_line)}</div>
+      <div class="meta-row">${pos.format === 'PRINT_PDF' ? 'Print-ready' : 'Digital'} · POS asset preview</div>
+    </div>
+  </body></html>`;
 }
 
 export async function notify(winEventId, userId) {
