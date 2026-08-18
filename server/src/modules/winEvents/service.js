@@ -111,21 +111,6 @@ function headlineFor(winType) {
   return 'CELEBRATE A WIN';
 }
 
-const CONFETTI_COLORS = ['#ec008c', '#f04e23', '#fff200', '#00853a', '#00aeef', '#522e91'];
-function confettiSvg() {
-  const seeds = [
-    [8, 6], [92, 4], [18, 16], [80, 12], [50, 3], [4, 30], [96, 26], [65, 8],
-    [30, 5], [45, 20], [12, 22], [88, 18], [58, 14], [22, 9], [72, 22], [38, 11],
-  ];
-  const shapes = seeds.map(([x, y], i) => {
-    const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
-    return i % 3 === 0
-      ? `<circle cx="${x}%" cy="${y}%" r="5" fill="${color}" />`
-      : `<rect x="${x}%" y="${y}%" width="9" height="9" fill="${color}" transform="rotate(${(i * 37) % 360} ${x} ${y})" />`;
-  }).join('');
-  return `<svg class="confetti" viewBox="0 0 100 100" preserveAspectRatio="none">${shapes}</svg>`;
-}
-
 export async function previewPos(posId) {
   const pos = (await query('SELECT * FROM pos_generations WHERE id = $1', [posId])).rows[0];
   if (!pos) throw Object.assign(new Error('POS not found'), { status: 404 });
@@ -139,47 +124,37 @@ export async function previewPos(posId) {
     * { box-sizing: border-box; }
     body {
       margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      background: #1a1a2e; display: flex; justify-content: center; padding: 32px 16px;
+      background: #1a1a2e; display: flex; flex-direction: column; align-items: center; padding: 32px 16px;
     }
     .poster {
-      position: relative; width: 440px; overflow: hidden; color: #fff; text-align: center;
-      background:
-        radial-gradient(ellipse 120% 60% at 50% 0%, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 60%),
-        linear-gradient(180deg, #00aeef 0%, #0075bf 40%, #4b2e83 100%);
+      position: relative; width: 460px; aspect-ratio: 1055 / 1491; overflow: hidden; color: #fff; text-align: center;
+      background: url('/pos/celebrate-win-background.png') center / cover no-repeat;
       border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.4);
-      padding: 40px 30px 0;
     }
-    .confetti { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .85; }
-    .content { position: relative; z-index: 1; }
+    .top { position: absolute; top: 0; left: 0; right: 0; padding: 36px 30px 0; }
     .logo-row { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-    .logo-row img { height: 110px; }
+    .logo-row img { height: 100px; }
     .headline {
-      font-size: 46px; font-weight: 800; line-height: 1.02; margin: 0 0 10px;
-      text-transform: uppercase; letter-spacing: .5px; text-shadow: 0 2px 12px rgba(0,0,0,.15);
+      font-size: 42px; font-weight: 800; line-height: 1.02; margin: 0 0 8px;
+      text-transform: uppercase; letter-spacing: .5px; text-shadow: 0 2px 12px rgba(0,0,0,.25);
     }
-    .amount { font-size: 58px; font-weight: 800; margin: 0 0 18px; letter-spacing: -1px; }
-    .venue { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
-    .date { font-size: 14px; opacity: .9; margin-bottom: 22px; }
+    .amount { font-size: 54px; font-weight: 800; margin: 0 0 14px; letter-spacing: -1px; text-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .venue { font-size: 19px; font-weight: 700; margin-bottom: 2px; }
+    .date { font-size: 13px; opacity: .9; margin-bottom: 16px; }
     .badge {
-      display: inline-block; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.5);
-      padding: 8px 22px; border-radius: 999px; font-weight: 700; font-size: 14px; margin-bottom: 28px;
+      display: inline-block; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.6);
+      padding: 7px 20px; border-radius: 999px; font-weight: 700; font-size: 13px;
     }
-    .illustration {
-      background: #fff; height: 150px; margin: 0 -30px; border-radius: 50% 50% 0 0 / 40% 40% 0 0;
-      display: flex; align-items: center; justify-content: center; font-size: 44px; letter-spacing: 6px;
+    .bottom {
+      position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 20px 18px;
+      background: linear-gradient(to top, rgba(20,10,40,.85) 0%, rgba(20,10,40,.5) 55%, transparent 100%);
     }
-    .tagline {
-      font-weight: 800; font-style: italic; font-size: 19px; margin: 22px 0 14px; position: relative; z-index: 1;
-    }
-    .rg {
-      font-size: 10px; opacity: .85; line-height: 1.5; padding: 0 4px 22px; position: relative; z-index: 1;
-    }
-    .meta-row { font-size: 11px; opacity: .7; padding-bottom: 10px; position: relative; z-index: 1; }
+    .tagline { font-weight: 800; font-style: italic; font-size: 18px; margin-bottom: 10px; }
+    .rg { font-size: 9.5px; opacity: .9; line-height: 1.5; }
   </style></head>
   <body>
     <div class="poster">
-      ${confettiSvg()}
-      <div class="content">
+      <div class="top">
         <div class="logo-row"><img src="/brand/keno-logo-reversed.png" alt="Keno" /></div>
         <div class="headline">${headline}</div>
         <div class="amount">${esc(s.prize_amount)}</div>
@@ -187,11 +162,12 @@ export async function previewPos(posId) {
         <div class="date">${esc(s.win_date)}</div>
         ${badge ? `<div class="badge">${badge}</div>` : ''}
       </div>
-      <div class="illustration">🎉🙌🎊</div>
-      <div class="tagline">Could you be next?</div>
-      <div class="rg">${esc(s.rg_messaging_line)}</div>
-      <div class="meta-row">${pos.format === 'PRINT_PDF' ? 'Print-ready' : 'Digital'} · POS asset preview</div>
+      <div class="bottom">
+        <div class="tagline">Could you be next?</div>
+        <div class="rg">${esc(s.rg_messaging_line)}</div>
+      </div>
     </div>
+    <p style="color:#888; font-size:11px; margin-top:14px;">${pos.format === 'PRINT_PDF' ? 'Print-ready' : 'Digital'} · POS asset preview</p>
   </body></html>`;
 }
 
