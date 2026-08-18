@@ -2,10 +2,21 @@ import dayjs from '../../lib/dayjs.js';
 import { query } from '../../lib/db.js';
 import { writeAuditLog } from '../../lib/auditLog.js';
 
+// Product and Win Type aren't stored on win_events itself -- they come from the linked
+// promotion (its type, and whichever prize-catalogue product(s) it's linked to).
+const PRODUCT_SUBQUERY = `(
+  SELECT string_agg(pci.name, ', ' ORDER BY pp.sort_order)
+  FROM promotion_prizes pp JOIN prize_catalogue_items pci ON pci.id = pp.prize_catalogue_item_id
+  WHERE pp.promotion_id = p.id
+) AS product_name`;
+
 export async function listWinEvents() {
   const { rows } = await query(
-    `SELECT we.*, v.name AS venue_name, v.jurisdiction_id, p.name AS promotion_name
-     FROM win_events we JOIN venues v ON v.id = we.venue_id JOIN promotions p ON p.id = we.promotion_id
+    `SELECT we.*, v.name AS venue_name, v.jurisdiction_id, p.name AS promotion_name, pt.name AS win_type, ${PRODUCT_SUBQUERY}
+     FROM win_events we
+     JOIN venues v ON v.id = we.venue_id
+     JOIN promotions p ON p.id = we.promotion_id
+     JOIN promotion_types pt ON pt.id = p.promotion_type_id
      ORDER BY we.created_at DESC`
   );
   return rows;
@@ -13,11 +24,13 @@ export async function listWinEvents() {
 
 export async function getWinEvent(id) {
   const event = (await query(
-    `SELECT we.*, v.name AS venue_name, v.address, v.jurisdiction_id, v.bdm_user_id, j.default_rg_text, p.name AS promotion_name
+    `SELECT we.*, v.name AS venue_name, v.address, v.jurisdiction_id, v.bdm_user_id, j.default_rg_text,
+            p.name AS promotion_name, pt.name AS win_type, ${PRODUCT_SUBQUERY}
      FROM win_events we
      JOIN venues v ON v.id = we.venue_id
      JOIN jurisdictions j ON j.id = v.jurisdiction_id
      JOIN promotions p ON p.id = we.promotion_id
+     JOIN promotion_types pt ON pt.id = p.promotion_type_id
      WHERE we.id = $1`,
     [id]
   )).rows[0];
