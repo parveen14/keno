@@ -151,8 +151,8 @@ export async function previewPos(posId) {
     }
     .confetti { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .85; }
     .content { position: relative; z-index: 1; }
-    .logo-row { display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
-    .logo-row img { height: 64px; }
+    .logo-row { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .logo-row img { height: 110px; }
     .headline {
       font-size: 46px; font-weight: 800; line-height: 1.02; margin: 0 0 10px;
       text-transform: uppercase; letter-spacing: .5px; text-shadow: 0 2px 12px rgba(0,0,0,.15);
