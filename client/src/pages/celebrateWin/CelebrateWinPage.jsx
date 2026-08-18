@@ -50,10 +50,8 @@ export default function CelebrateWinPage() {
 
   const columns = [
     { title: 'Venue', dataIndex: 'venue_name', render: (v, r) => <a onClick={() => setSelectedId(r.id)}>{v}</a> },
-    { title: 'Promotion', dataIndex: 'promotion_name' },
-    { title: 'Prize', dataIndex: 'prize_amount', render: (v) => `$${Number(v).toLocaleString()}` },
-    { title: 'Spot', dataIndex: 'spot_number' },
-    { title: 'Win date', dataIndex: 'win_date', render: (v) => dayjs(v).format('DD MMM YYYY') },
+    { title: 'Win Amount ($)', dataIndex: 'prize_amount', render: (v) => `$${Number(v).toLocaleString()}` },
+    { title: 'Win Date', dataIndex: 'win_date', render: (v) => dayjs(v).format('DD MMM YYYY') },
     { title: 'Status', dataIndex: 'status', render: (v) => <StatusTag status={v} /> },
     {
       title: '',
