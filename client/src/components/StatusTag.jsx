@@ -13,6 +13,7 @@ const COLORS = {
   PLACED: 'blue',
   PACKED: 'gold',
   SHIPPED: 'blue',
+  OUT_FOR_DELIVERY: 'cyan',
   DELIVERED: 'green',
   QUEUED: 'default',
   SENT: 'green',

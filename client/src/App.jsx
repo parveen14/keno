@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AppShell from './layout/AppShell.jsx';
 import { RequireRole } from './auth/RequireRole.jsx';
+import { CartProvider } from './cart/CartContext.jsx';
 import LoginPage from './auth/LoginPage.jsx';
 
 import DashboardPage from './pages/dashboard/DashboardPage.jsx';
@@ -21,7 +22,11 @@ import KeyAccountsPage from './pages/keyAccounts/KeyAccountsPage.jsx';
 import KeyAccountGroupFormPage from './pages/keyAccounts/KeyAccountGroupFormPage.jsx';
 import CataloguePage from './pages/catalogue/CataloguePage.jsx';
 import CatalogueItemFormPage from './pages/catalogue/CatalogueItemFormPage.jsx';
+import CatalogueItemPage from './pages/catalogue/CatalogueItemPage.jsx';
+import SubstitutionPage from './pages/catalogue/SubstitutionPage.jsx';
+import CartPage from './pages/catalogue/CartPage.jsx';
 import OrdersPage from './pages/orders/OrdersPage.jsx';
+import OrderDetailPage from './pages/orders/OrderDetailPage.jsx';
 import CelebrateWinPage from './pages/celebrateWin/CelebrateWinPage.jsx';
 import WinEventFormPage from './pages/celebrateWin/WinEventFormPage.jsx';
 import ReturnsPage from './pages/returns/ReturnsPage.jsx';
@@ -43,7 +48,9 @@ export default function App() {
         path="/"
         element={
           <RequireRole>
-            <AppShell />
+            <CartProvider>
+              <AppShell />
+            </CartProvider>
           </RequireRole>
         }
       >
@@ -72,7 +79,11 @@ export default function App() {
         <Route path="catalogue" element={<CataloguePage />} />
         <Route path="catalogue/new" element={<CatalogueItemFormPage />} />
         <Route path="catalogue/:id/edit" element={<CatalogueItemFormPage />} />
+        <Route path="catalogue/cart" element={<CartPage />} />
+        <Route path="catalogue/:id/substitute" element={<SubstitutionPage />} />
+        <Route path="catalogue/:id" element={<CatalogueItemPage />} />
         <Route path="orders" element={<OrdersPage />} />
+        <Route path="orders/:id" element={<OrderDetailPage />} />
         <Route path="celebrate-win" element={<CelebrateWinPage />} />
         <Route path="celebrate-win/new" element={<WinEventFormPage />} />
         <Route path="celebrate-win/:id/edit" element={<WinEventFormPage />} />

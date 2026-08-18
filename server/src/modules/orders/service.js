@@ -25,7 +25,7 @@ export async function listOrders({ venueId, status, keyAccountGroupId } = {}) {
 
 export async function getOrder(id) {
   const order = (await query(
-    `SELECT o.*, v.name AS venue_name, kag.name AS key_account_group_name, fc.rate AS freight_rate
+    `SELECT o.*, v.name AS venue_name, v.address AS venue_address, kag.name AS key_account_group_name, fc.rate AS freight_rate
      FROM orders o JOIN venues v ON v.id = o.venue_id
      LEFT JOIN key_account_groups kag ON kag.id = o.key_account_group_id
      LEFT JOIN freight_charges fc ON fc.id = o.freight_charge_id
