@@ -35,8 +35,11 @@ import InvoicesPage from './pages/invoices/InvoicesPage.jsx';
 import InvoiceFormPage from './pages/invoices/InvoiceFormPage.jsx';
 import RatingsPage from './pages/ratings/RatingsPage.jsx';
 import SurveyFormPage from './pages/ratings/SurveyFormPage.jsx';
+import MyPromotionsPage from './pages/myPromotions/MyPromotionsPage.jsx';
+import RatePromotionPage from './pages/myPromotions/RatePromotionPage.jsx';
 import ReportingPage from './pages/reporting/ReportingPage.jsx';
 import SupportRequestFormPage from './pages/reporting/SupportRequestFormPage.jsx';
+import VenueDetailPage from './pages/venues/VenueDetailPage.jsx';
 import PublicExplorerPage from './pages/public/PublicExplorerPage.jsx';
 
 export default function App() {
@@ -92,12 +95,15 @@ export default function App() {
         <Route path="returns/:id/edit" element={<ReturnCaseFormPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/new" element={<InvoiceFormPage />} />
-        <Route path="ratings" element={<RatingsPage />} />
-        <Route path="ratings/surveys/new" element={<SurveyFormPage />} />
-        <Route path="ratings/surveys/:id/edit" element={<SurveyFormPage />} />
+        <Route path="ratings" element={<RequireRole roles={['BDM', 'APPROVER', 'ADMIN']}><RatingsPage /></RequireRole>} />
+        <Route path="ratings/surveys/new" element={<RequireRole roles={['BDM', 'APPROVER', 'ADMIN']}><SurveyFormPage /></RequireRole>} />
+        <Route path="ratings/surveys/:id/edit" element={<RequireRole roles={['BDM', 'APPROVER', 'ADMIN']}><SurveyFormPage /></RequireRole>} />
+        <Route path="my-promotions" element={<RequireRole roles={['VENUE']}><MyPromotionsPage /></RequireRole>} />
+        <Route path="my-promotions/:promotionId/rate" element={<RequireRole roles={['VENUE']}><RatePromotionPage /></RequireRole>} />
         <Route path="reporting" element={<ReportingPage />} />
         <Route path="reporting/support-requests/new" element={<SupportRequestFormPage />} />
         <Route path="reporting/support-requests/:id/edit" element={<SupportRequestFormPage />} />
+        <Route path="venues/:id" element={<VenueDetailPage />} />
       </Route>
     </Routes>
   );

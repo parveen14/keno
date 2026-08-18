@@ -538,11 +538,21 @@ CREATE TABLE promotion_ratings (
   promotion_survey_id uuid NOT NULL REFERENCES promotion_surveys(id) ON DELETE CASCADE,
   venue_id uuid NOT NULL REFERENCES venues(id),
   overall_rating int NOT NULL CHECK (overall_rating BETWEEN 1 AND 5),
-  prize_rating int NOT NULL CHECK (prize_rating BETWEEN 1 AND 5),
+  -- Superseded by promotion_rating_prizes (one star rating per prize within the promotion).
+  -- Kept nullable for older rows; the new rating flow no longer collects a single aggregate value.
+  prize_rating int CHECK (prize_rating BETWEEN 1 AND 5),
   delivery_on_time boolean,
   comments text,
   submitted_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(promotion_survey_id, venue_id)
+);
+
+CREATE TABLE promotion_rating_prizes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  promotion_rating_id uuid NOT NULL REFERENCES promotion_ratings(id) ON DELETE CASCADE,
+  promotion_prize_id uuid NOT NULL REFERENCES promotion_prizes(id) ON DELETE CASCADE,
+  rating int NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  UNIQUE(promotion_rating_id, promotion_prize_id)
 );
 
 -- ============================================================
@@ -565,8 +575,11 @@ CREATE TABLE support_requests (
   venue_id uuid REFERENCES venues(id),
   promotion_id uuid REFERENCES promotions(id),
   order_id uuid REFERENCES orders(id),
+  exception_id uuid REFERENCES exception_flags(id),
+  issue_type text NOT NULL DEFAULT 'GENERAL' CHECK (issue_type IN ('GENERAL','EXCEPTION','PROMOTION','ORDER','DELIVERY','OTHER')),
   subject text NOT NULL,
   description text,
+  resolution_note text,
   status text NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN','IN_PROGRESS','RESOLVED','CLOSED')),
   priority text NOT NULL DEFAULT 'MEDIUM' CHECK (priority IN ('LOW','MEDIUM','HIGH')),
   assigned_to_user_id uuid REFERENCES users(id),
@@ -579,6 +592,23 @@ CREATE TABLE support_request_comments (
   support_request_id uuid NOT NULL REFERENCES support_requests(id) ON DELETE CASCADE,
   author_user_id uuid REFERENCES users(id),
   comment text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE support_request_status_history (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  support_request_id uuid NOT NULL REFERENCES support_requests(id) ON DELETE CASCADE,
+  status text NOT NULL,
+  changed_by uuid REFERENCES users(id),
+  changed_at timestamptz NOT NULL DEFAULT now(),
+  note text
+);
+
+CREATE TABLE venue_notes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  venue_id uuid NOT NULL REFERENCES venues(id) ON DELETE CASCADE,
+  author_user_id uuid REFERENCES users(id),
+  note text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

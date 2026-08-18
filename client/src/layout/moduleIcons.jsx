@@ -19,6 +19,7 @@ export const MODULE_ICONS = {
   '/returns': RollbackOutlined,
   '/invoices': FileTextOutlined,
   '/ratings': StarOutlined,
+  '/my-promotions': StarOutlined,
   '/reporting': BarChartOutlined,
 };
 

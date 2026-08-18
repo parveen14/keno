@@ -37,8 +37,17 @@ export const navGroups = [
     label: 'Finance & Insights',
     items: [
       { key: '/invoices', label: 'Invoicing (UC5)' },
-      { key: '/ratings', label: 'Ratings & Insights (UC11)' },
+      { key: '/ratings', label: 'Promotion Insights (UC11)', roles: ['BDM', 'APPROVER', 'ADMIN'] },
+      { key: '/my-promotions', label: 'My Promotions (UC11)', roles: ['VENUE'] },
       { key: '/reporting', label: 'Operational Reporting (UC12)' },
     ],
   },
 ];
+
+// Items with no `roles` array are visible to everyone; otherwise the current user's role must
+// be listed. Groups that end up with zero visible items are dropped entirely.
+export function visibleNavGroups(role) {
+  return navGroups
+    .map((group) => ({ ...group, items: group.items.filter((item) => !item.roles || item.roles.includes(role)) }))
+    .filter((group) => group.items.length > 0);
+}

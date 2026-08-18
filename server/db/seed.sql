@@ -52,7 +52,8 @@ INSERT INTO users (name, email, password_hash, role, venue_id) VALUES
   ('Dana Reed (Venue: Anchor Hotel)', 'venue.anchor@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='NSW-HOTEL-01')),
   ('Priya Nair (Venue: Central Sydney Club)', 'venue.centralsydney@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='NSW-CLUB-01')),
   ('Mia Chen (Venue: Sunshine Coast Hotel)', 'venue.sunshinecoast@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='QLD-HOTEL-01')),
-  ('Zoe Marsh (Venue: Fitzroy Club)', 'venue.fitzroy@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='VIC-CLUB-01'));
+  ('Zoe Marsh (Venue: Fitzroy Club)', 'venue.fitzroy@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='VIC-CLUB-01')),
+  ('Ravi Fernando (Venue: Cairns Leagues Club)', 'venue.cairns@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='QLD-CLUB-02'));
 
 -- Assign BDMs to venues (NSW/QLD -> Jordan, VIC -> Casey)
 UPDATE venues SET bdm_user_id = (SELECT id FROM users WHERE email='bdm.north@keno-demo.example')
@@ -176,6 +177,22 @@ INSERT INTO promotion_versions (promotion_id, version_number, snapshot, change_r
 INSERT INTO approvals (promotion_id, promotion_version_id, status, reason, approver_id, decided_at)
   SELECT p.id, pv.id, 'APPROVED', 'Meets key account discount policy.', (SELECT id FROM users WHERE email='approver.finance@keno-demo.example'), now() - interval '3 days'
   FROM promotions p JOIN promotion_versions pv ON pv.promotion_id = p.id WHERE p.name='Metro Clubs Bulk Merch Drop';
+
+-- Promotion F1/F2: land exactly on CURRENT_DATE so the UC12 activation/deactivation report
+-- always has at least one row in each table right after a reset, with no date picking required.
+INSERT INTO promotions (promotion_type_id, name, description, jurisdiction_id, start_date, end_date, status, created_by) VALUES
+  ((SELECT id FROM promotion_types WHERE code='STANDARD'), 'NSW Spring Loyalty Refresh', 'Loyalty refresh promotion activating across NSW clubs and hotels.',
+   (SELECT id FROM jurisdictions WHERE code='NSW'), CURRENT_DATE, CURRENT_DATE + 31, 'ACTIVE',
+   (SELECT id FROM users WHERE email='admin@keno-demo.example'));
+INSERT INTO promotion_versions (promotion_id, version_number, snapshot, change_reason, changed_by)
+  SELECT id, 1, to_jsonb(p), 'Initial draft created', created_by FROM promotions p WHERE name='NSW Spring Loyalty Refresh';
+
+INSERT INTO promotions (promotion_type_id, name, description, jurisdiction_id, start_date, end_date, status, created_by) VALUES
+  ((SELECT id FROM promotion_types WHERE code='STANDARD'), 'QLD Bowls Winter Wrap-Up', 'Winter promotion concluding across QLD bowls clubs.',
+   (SELECT id FROM jurisdictions WHERE code='QLD'), CURRENT_DATE - 31, CURRENT_DATE, 'COMPLETED',
+   (SELECT id FROM users WHERE email='admin@keno-demo.example'));
+INSERT INTO promotion_versions (promotion_id, version_number, snapshot, change_reason, changed_by)
+  SELECT id, 1, to_jsonb(p), 'Initial draft created', created_by FROM promotions p WHERE name='QLD Bowls Winter Wrap-Up';
 
 -- Promotion F: already-decided REJECTED -- shows both outcomes in the audit report
 INSERT INTO promotions (promotion_type_id, name, description, jurisdiction_id, start_date, end_date, status, created_by) VALUES
@@ -484,12 +501,32 @@ WHERE rc.reason = 'FAULTY';
 INSERT INTO promotion_surveys (promotion_id, opens_at, closes_at, is_required)
   SELECT id, now() - interval '25 days', now() + interval '5 days', false FROM promotions WHERE name='QLD Winter Prize Giveaway';
 
-INSERT INTO promotion_ratings (promotion_survey_id, venue_id, overall_rating, prize_rating, delivery_on_time, comments, submitted_at)
+-- Three prizes linked to this promotion so the per-prize rating flow (UC11 redesign) has real
+-- data to rate/aggregate, matching the client's "rate each prize within the promotion" mockup.
+INSERT INTO promotion_prizes (promotion_id, prize_catalogue_item_id, slot_label, sort_order)
+SELECT (SELECT id FROM promotions WHERE name='QLD Winter Prize Giveaway'), pci.id, slot.label, slot.sort_order
+FROM (VALUES ('Prize 1', 0, 'ELEC-SPKR-01'), ('Prize 2', 1, 'GIFT-SUPER-01'), ('Prize 3', 2, 'OUT-TUMB-01')) AS slot(label, sort_order, sku)
+JOIN prize_catalogue_items pci ON pci.sku = slot.sku;
+
+INSERT INTO promotion_ratings (promotion_survey_id, venue_id, overall_rating, comments, submitted_at)
 SELECT (SELECT ps.id FROM promotion_surveys ps JOIN promotions p ON p.id = ps.promotion_id WHERE p.name='QLD Winter Prize Giveaway'),
-       (SELECT id FROM venues WHERE code='QLD-HOTEL-01'), 5, 4, true, 'Great engagement from regulars, prizes arrived on time.', now() - interval '20 days';
-INSERT INTO promotion_ratings (promotion_survey_id, venue_id, overall_rating, prize_rating, delivery_on_time, comments, submitted_at)
+       (SELECT id FROM venues WHERE code='QLD-HOTEL-01'), 5, 'Great engagement from regulars, prizes arrived on time.', now() - interval '20 days';
+INSERT INTO promotion_rating_prizes (promotion_rating_id, promotion_prize_id, rating)
+SELECT pr.id, pp.id, r.rating
+FROM promotion_ratings pr
+JOIN venues v ON v.id = pr.venue_id AND v.code = 'QLD-HOTEL-01'
+JOIN promotion_prizes pp ON pp.promotion_id = (SELECT id FROM promotions WHERE name='QLD Winter Prize Giveaway')
+JOIN (VALUES ('Prize 1', 5), ('Prize 2', 4), ('Prize 3', 4)) AS r(label, rating) ON r.label = pp.slot_label;
+
+INSERT INTO promotion_ratings (promotion_survey_id, venue_id, overall_rating, comments, submitted_at)
 SELECT (SELECT ps.id FROM promotion_surveys ps JOIN promotions p ON p.id = ps.promotion_id WHERE p.name='QLD Winter Prize Giveaway'),
-       (SELECT id FROM venues WHERE code='QLD-CLUB-01'), 3, 3, false, 'Delivery was a few days late, otherwise fine.', now() - interval '18 days';
+       (SELECT id FROM venues WHERE code='QLD-CLUB-01'), 3, 'Delivery was a few days late, otherwise fine.', now() - interval '18 days';
+INSERT INTO promotion_rating_prizes (promotion_rating_id, promotion_prize_id, rating)
+SELECT pr.id, pp.id, r.rating
+FROM promotion_ratings pr
+JOIN venues v ON v.id = pr.venue_id AND v.code = 'QLD-CLUB-01'
+JOIN promotion_prizes pp ON pp.promotion_id = (SELECT id FROM promotions WHERE name='QLD Winter Prize Giveaway')
+JOIN (VALUES ('Prize 1', 3), ('Prize 2', 3), ('Prize 3', 2)) AS r(label, rating) ON r.label = pp.slot_label;
 
 -- Exception flag: venue is active but has no current promotion -- UC12 demo target
 INSERT INTO exception_flags (type, venue_id, note, detected_at)
@@ -497,19 +534,31 @@ SELECT 'VENUE_ACTIVE_NO_PROMOTION', v.id, v.name || ' is active but has no curre
 FROM venues v WHERE v.code = 'VIC-BOWLS-02';
 
 -- Support requests -- UC12 demo history
-INSERT INTO support_requests (requester_user_id, venue_id, order_id, subject, description, status, priority, assigned_to_user_id, created_at)
+INSERT INTO support_requests (requester_user_id, venue_id, order_id, issue_type, subject, description, status, priority, assigned_to_user_id, created_at)
 SELECT (SELECT id FROM users WHERE email='venue.fitzroy@keno-demo.example'), (SELECT id FROM venues WHERE code='VIC-CLUB-01'),
-       (SELECT id FROM orders WHERE po_reference='PO-1003'), 'Order status not updating', 'We packed this three days ago but the tracker still says Packed.',
+       (SELECT id FROM orders WHERE po_reference='PO-1003'), 'ORDER', 'Order status not updating', 'We packed this three days ago but the tracker still says Packed.',
        'OPEN', 'MEDIUM', NULL, now() - interval '2 days';
 INSERT INTO support_request_comments (support_request_id, author_user_id, comment, created_at)
 SELECT id, (SELECT id FROM users WHERE email='admin@keno-demo.example'), 'Checked with warehouse — dispatch confirmed, updating tracker now.', now() - interval '1 day'
 FROM support_requests WHERE subject='Order status not updating';
+INSERT INTO support_request_status_history (support_request_id, status, changed_by, changed_at, note)
+SELECT id, 'OPEN', requester_user_id, created_at, 'Request created' FROM support_requests WHERE subject='Order status not updating';
 
-INSERT INTO support_requests (requester_user_id, venue_id, promotion_id, subject, description, status, priority, assigned_to_user_id, created_at)
+INSERT INTO support_requests (requester_user_id, venue_id, promotion_id, issue_type, subject, description, status, priority, assigned_to_user_id, created_at)
 SELECT (SELECT id FROM users WHERE email='bdm.north@keno-demo.example'), (SELECT id FROM venues WHERE code='NSW-BOWLS-01'),
-       (SELECT id FROM promotions WHERE name='Bowls Clubs Pilot Activation'), 'Need updated POS artwork for pilot venues',
+       (SELECT id FROM promotions WHERE name='Bowls Clubs Pilot Activation'), 'PROMOTION', 'Need updated POS artwork for pilot venues',
        'Pilot group venues need refreshed POS artwork ahead of the opt-in deadline.', 'IN_PROGRESS', 'HIGH',
        (SELECT id FROM users WHERE email='admin@keno-demo.example'), now() - interval '1 day';
 INSERT INTO support_request_comments (support_request_id, author_user_id, comment, created_at)
 SELECT id, (SELECT id FROM users WHERE email='admin@keno-demo.example'), 'Artwork brief sent to design team, ETA 2 days.', now() - interval '12 hours'
 FROM support_requests WHERE subject='Need updated POS artwork for pilot venues';
+INSERT INTO support_request_status_history (support_request_id, status, changed_by, changed_at, note)
+SELECT id, 'OPEN', requester_user_id, created_at, 'Request created' FROM support_requests WHERE subject='Need updated POS artwork for pilot venues';
+INSERT INTO support_request_status_history (support_request_id, status, changed_by, changed_at, note)
+SELECT id, 'IN_PROGRESS', assigned_to_user_id, now() - interval '18 hours', 'Assigned and picked up by support team'
+FROM support_requests WHERE subject='Need updated POS artwork for pilot venues';
+
+-- Venue note -- UC12 demo target (Notes tab on venue detail)
+INSERT INTO venue_notes (venue_id, author_user_id, note, created_at)
+SELECT (SELECT id FROM venues WHERE code='VIC-BOWLS-02'), (SELECT id FROM users WHERE email='admin@keno-demo.example'),
+       'Called venue manager — confirmed they are keen for the next bowls pilot round once a promotion is assigned.', now() - interval '6 hours';

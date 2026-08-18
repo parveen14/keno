@@ -2,13 +2,13 @@ import React from 'react';
 import { Card, Typography, Row, Col } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { navGroups } from '../../layout/navConfig.js';
+import { visibleNavGroups } from '../../layout/navConfig.js';
 import { ModuleIcon } from '../../layout/moduleIcons.jsx';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const moduleGroups = navGroups.filter((g) => g.key !== 'dashboard');
+  const moduleGroups = visibleNavGroups(user?.role).filter((g) => g.key !== 'dashboard');
 
   return (
     <div>

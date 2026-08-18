@@ -1,13 +1,15 @@
 import React from 'react';
 import { Menu } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { navGroups } from './navConfig.js';
+import { visibleNavGroups } from './navConfig.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
-  const items = navGroups.map((group) => ({
+  const items = visibleNavGroups(user?.role).map((group) => ({
     key: group.key,
     label: group.label,
     type: 'group',
