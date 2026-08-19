@@ -31,6 +31,7 @@ import CelebrateWinPage from './pages/celebrateWin/CelebrateWinPage.jsx';
 import WinEventFormPage from './pages/celebrateWin/WinEventFormPage.jsx';
 import ReturnsPage from './pages/returns/ReturnsPage.jsx';
 import ReturnCaseFormPage from './pages/returns/ReturnCaseFormPage.jsx';
+import ReturnCaseDetailPage from './pages/returns/ReturnCaseDetailPage.jsx';
 import InvoicesPage from './pages/invoices/InvoicesPage.jsx';
 import InvoiceFormPage from './pages/invoices/InvoiceFormPage.jsx';
 import RatingsPage from './pages/ratings/RatingsPage.jsx';
@@ -93,6 +94,7 @@ export default function App() {
         <Route path="returns" element={<ReturnsPage />} />
         <Route path="returns/new" element={<ReturnCaseFormPage />} />
         <Route path="returns/:id/edit" element={<ReturnCaseFormPage />} />
+        <Route path="returns/:id" element={<ReturnCaseDetailPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/new" element={<InvoiceFormPage />} />
         <Route path="ratings" element={<RequireRole roles={['BDM', 'APPROVER', 'ADMIN']}><RatingsPage /></RequireRole>} />

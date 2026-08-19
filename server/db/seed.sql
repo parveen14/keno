@@ -459,8 +459,8 @@ FROM win_events we JOIN venues v ON v.id = we.venue_id JOIN users u ON u.id = v.
 WHERE we.spot_number = 'A04';
 
 -- Returns / damaged goods -- UC10: one resolved via credit, one still in triage
-INSERT INTO return_cases (order_item_id, venue_id, reason, notes, status, resolution_type, created_by, created_at)
-SELECT oi.id, o.venue_id, 'DAMAGED', 'Speaker arrived with a cracked casing.', 'CREDIT_ISSUED', 'CREDIT',
+INSERT INTO return_cases (order_item_id, venue_id, reason, notes, quantity_damaged, root_cause, status, resolution_type, created_by, created_at)
+SELECT oi.id, o.venue_id, 'DAMAGED', 'Speaker arrived with a cracked casing.', 2, 'TRANSIT_DAMAGE', 'CREDIT_ISSUED', 'CREDIT',
        (SELECT id FROM users WHERE email='venue.anchor@keno-demo.example'), now() - interval '10 days'
 FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.po_reference='PO-1001';
 
@@ -481,8 +481,8 @@ FROM return_cases rc,
   ) AS s(status, email, at, note)
 WHERE rc.reason = 'DAMAGED' AND rc.notes LIKE 'Speaker%';
 
-INSERT INTO return_cases (order_item_id, venue_id, reason, notes, status, created_by, created_at)
-SELECT oi.id, o.venue_id, 'FAULTY', 'Air fryer will not power on.', 'IN_TRIAGE',
+INSERT INTO return_cases (order_item_id, venue_id, reason, notes, quantity_damaged, root_cause, status, created_by, created_at)
+SELECT oi.id, o.venue_id, 'FAULTY', 'Air fryer will not power on.', 1, 'MANUFACTURING_DEFECT', 'IN_TRIAGE',
        (SELECT id FROM users WHERE email='admin@keno-demo.example'), now() - interval '2 days'
 FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.po_reference='PO-1002';
 
@@ -491,7 +491,68 @@ SELECT rc.id, s.status, (SELECT id FROM users WHERE email=s.email), s.at, s.note
 FROM return_cases rc,
   (VALUES ('LODGED', 'admin@keno-demo.example', now() - interval '2 days', 'Case lodged'),
           ('IN_TRIAGE', 'admin@keno-demo.example', now() - interval '1 day', 'Awaiting supplier fault confirmation')) AS s(status, email, at, note)
-WHERE rc.reason = 'FAULTY';
+WHERE rc.reason = 'FAULTY' AND rc.notes = 'Air fryer will not power on.';
+
+-- A broader spread of return cases (varied products/reasons/status/dates) so the UC10 reporting
+-- page (over-time trend, by-reason breakdown, top-products table) has real volume to aggregate.
+INSERT INTO return_cases (order_item_id, venue_id, reason, notes, quantity_damaged, priority, root_cause, status, resolution_type, created_by, created_at)
+SELECT oi.id, o.venue_id, b.reason, b.notes, b.qty, b.priority,
+       CASE b.reason WHEN 'DAMAGED' THEN 'TRANSIT_DAMAGE' WHEN 'FAULTY' THEN 'MANUFACTURING_DEFECT' WHEN 'WRONG_ITEM' THEN 'WAREHOUSE_HANDLING' ELSE 'OTHER' END,
+       b.status, b.resolution_type,
+       (SELECT id FROM users WHERE email='admin@keno-demo.example'), now() - (b.days_ago || ' days')::interval
+FROM (VALUES
+  ('PO-1001','DAMAGED','Second batch arrived dented.',1,'LOW','CLOSED','CREDIT',52),
+  ('PO-1002','FAULTY','Unit smells of burning plastic.',1,'HIGH','REPLACEMENT_SHIPPED','REPLACEMENT',45),
+  ('PO-1003','WRONG_ITEM','Received wired earbuds instead of wireless.',2,'MEDIUM','CLOSED','REPLACEMENT',40),
+  ('PO-1004','DAMAGED','One chair leg snapped in transit.',1,'MEDIUM','REPLACEMENT_SHIPPED','REPLACEMENT',35),
+  ('PO-1005','OTHER','Missing lid on two tumblers.',2,'LOW','CREDIT_ISSUED','CREDIT',30),
+  ('PO-BULK-2001','FAULTY','Steam wand not working on delivery.',1,'HIGH','IN_TRIAGE',NULL,25),
+  ('PO-1001','DAMAGED','Casing cracked again on reorder.',1,'MEDIUM','REJECTED',NULL,22),
+  ('PO-1002','WRONG_ITEM','Wrong colour fryer received.',1,'LOW','CLOSED','REPLACEMENT',18),
+  ('PO-1003','DAMAGED','Charging case lid broken.',1,'MEDIUM','REPLACEMENT_SHIPPED','REPLACEMENT',14),
+  ('PO-1004','FAULTY','Reclining mechanism jammed.',1,'MEDIUM','APPROVED',NULL,10),
+  ('PO-1005','DAMAGED','Print faded on 3 tumblers.',3,'LOW','LODGED',NULL,6),
+  ('PO-1001','FAULTY','Bluetooth pairing fails intermittently.',1,'MEDIUM','LODGED',NULL,3)
+) AS b(po, reason, notes, qty, priority, status, resolution_type, days_ago)
+JOIN orders o ON o.po_reference = b.po
+JOIN order_items oi ON oi.order_id = o.id;
+
+INSERT INTO return_case_status_history (return_case_id, status, changed_by, changed_at, note)
+SELECT id, 'LODGED', created_by, created_at, 'Case lodged by venue'
+FROM return_cases
+WHERE notes IN (
+  'Second batch arrived dented.','Unit smells of burning plastic.','Received wired earbuds instead of wireless.',
+  'One chair leg snapped in transit.','Missing lid on two tumblers.','Steam wand not working on delivery.',
+  'Casing cracked again on reorder.','Wrong colour fryer received.','Charging case lid broken.',
+  'Reclining mechanism jammed.','Print faded on 3 tumblers.','Bluetooth pairing fails intermittently.'
+);
+
+INSERT INTO return_case_status_history (return_case_id, status, changed_by, changed_at, note)
+SELECT id, status, created_by, created_at + interval '3 days',
+       CASE status
+         WHEN 'CREDIT_ISSUED' THEN 'Credit issued to venue account'
+         WHEN 'REPLACEMENT_SHIPPED' THEN 'Replacement shipped to venue'
+         WHEN 'CLOSED' THEN 'Case closed'
+         WHEN 'REJECTED' THEN 'Claim rejected -- outside policy window'
+         WHEN 'APPROVED' THEN 'Approved, arranging replacement'
+         WHEN 'IN_TRIAGE' THEN 'Reviewing photos and evidence'
+         ELSE NULL
+       END
+FROM return_cases
+WHERE status <> 'LODGED'
+  AND notes IN (
+  'Second batch arrived dented.','Unit smells of burning plastic.','Received wired earbuds instead of wireless.',
+  'One chair leg snapped in transit.','Missing lid on two tumblers.','Steam wand not working on delivery.',
+  'Casing cracked again on reorder.','Wrong colour fryer received.','Charging case lid broken.',
+  'Reclining mechanism jammed.'
+);
+
+UPDATE return_cases SET tracking_ref = 'TNT' || (100000 + (random()*899999)::int)::text,
+       customer_notified_at = updated_at + interval '2 hours'
+WHERE status IN ('REPLACEMENT_SHIPPED','CREDIT_ISSUED','CLOSED','REJECTED') AND tracking_ref IS NULL AND resolution_type = 'REPLACEMENT';
+
+UPDATE return_cases SET customer_notified_at = updated_at + interval '2 hours'
+WHERE status IN ('REPLACEMENT_SHIPPED','CREDIT_ISSUED','CLOSED','REJECTED') AND customer_notified_at IS NULL;
 
 -- ============================================================
 -- 05. Finance & insights: ratings survey, exception flag, support requests -- UC5, UC11, UC12

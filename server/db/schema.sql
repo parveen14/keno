@@ -497,6 +497,13 @@ CREATE TABLE return_cases (
   venue_id uuid NOT NULL REFERENCES venues(id),
   reason text NOT NULL CHECK (reason IN ('DAMAGED','FAULTY','WRONG_ITEM','OTHER')),
   notes text,
+  quantity_damaged int NOT NULL DEFAULT 1,
+  -- Staff-only triage fields (UC10 redesign) -- distinct from the venue-visible `notes` description.
+  root_cause text CHECK (root_cause IN ('TRANSIT_DAMAGE','MANUFACTURING_DEFECT','PACKAGING_FAILURE','WAREHOUSE_HANDLING','OTHER')),
+  priority text NOT NULL DEFAULT 'MEDIUM' CHECK (priority IN ('LOW','MEDIUM','HIGH')),
+  assigned_to_user_id uuid REFERENCES users(id),
+  tracking_ref text,
+  customer_notified_at timestamptz,
   status text NOT NULL DEFAULT 'LODGED' CHECK (status IN ('LODGED','IN_TRIAGE','APPROVED','REPLACEMENT_SHIPPED','CREDIT_ISSUED','REJECTED','CLOSED')),
   resolution_type text CHECK (resolution_type IN ('REPLACEMENT','CREDIT','NONE')),
   credit_ledger_item_id uuid REFERENCES ledger_items(id),
@@ -510,6 +517,16 @@ CREATE TABLE return_case_photos (
   return_case_id uuid NOT NULL REFERENCES return_cases(id) ON DELETE CASCADE,
   file_url text NOT NULL,
   uploaded_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Free-form staff notes thread on a return case (UC10 redesign) -- separate from the structured
+-- status_history timeline below, matching the mockup's distinct Notes vs. History tabs.
+CREATE TABLE return_case_notes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  return_case_id uuid NOT NULL REFERENCES return_cases(id) ON DELETE CASCADE,
+  author_user_id uuid REFERENCES users(id),
+  note text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE return_case_status_history (
