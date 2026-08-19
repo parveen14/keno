@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, DatePicker, Select, Button, Space, message, Typography } from 'antd';
+import { Card, Form, DatePicker, Select, Button, Space, Row, Col, message, Typography } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
+import { FormSection } from '../../components/FormSection.jsx';
 
 const TARGET_LABEL = { VENUE: 'Single venue', KEY_ACCOUNT_GROUP: 'Key account group', JURISDICTION: 'Jurisdiction', CHANNEL: 'Channel' };
 
@@ -70,47 +71,60 @@ export default function ContentScheduleFormPage() {
   return (
     <Card
       title={isEdit ? `Edit schedule window: ${contentItem?.title || ''}` : `Schedule: ${contentItem?.title || ''}`}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/content')}>Back to list</Button>}
-    >
-      <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 560 }}>
-        {isEdit ? (
-          <Typography.Paragraph type="secondary">
-            Target: {TARGET_LABEL[existing.target_type]}: {existing.venue_name || existing.key_account_group_name || existing.jurisdiction_name || existing.channel_name}
-          </Typography.Paragraph>
-        ) : (
-          <>
-            <Form.Item name="targetType" label="Target" rules={[{ required: true }]}>
-              <Select options={Object.entries(TARGET_LABEL).map(([value, label]) => ({ value, label }))} />
-            </Form.Item>
-            {targetType === 'VENUE' && (
-              <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
-                <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-              </Form.Item>
-            )}
-            {targetType === 'KEY_ACCOUNT_GROUP' && (
-              <Form.Item name="keyAccountGroupId" label="Key account group" rules={[{ required: true }]}>
-                <Select options={kags?.map((k) => ({ value: k.id, label: k.name }))} />
-              </Form.Item>
-            )}
-            {targetType === 'JURISDICTION' && (
-              <Form.Item name="jurisdictionId" label="Jurisdiction" rules={[{ required: true }]}>
-                <Select options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
-              </Form.Item>
-            )}
-            {targetType === 'CHANNEL' && (
-              <Form.Item name="channelId" label="Channel" rules={[{ required: true }]}>
-                <Select options={channels?.map((c) => ({ value: c.id, label: c.name }))} />
-              </Form.Item>
-            )}
-          </>
-        )}
-        <Form.Item name="dates" label="Valid window" rules={[{ required: true }]}>
-          <DatePicker.RangePicker style={{ width: '100%' }} />
-        </Form.Item>
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
         <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>{isEdit ? 'Save' : 'Add schedule'}</Button>
-          <Button onClick={() => navigate('/content')}>Cancel</Button>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/content')}>Back to list</Button>
+          <Button type="primary" loading={saveMutation.isPending} onClick={() => form.submit()}>
+            {isEdit ? 'Save' : 'Add schedule'}
+          </Button>
         </Space>
+      )}
+    >
+      <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 720 }}>
+        <FormSection first title={isEdit ? undefined : 'Target'}>
+          {isEdit ? (
+            <Typography.Paragraph type="secondary">
+              Target: {TARGET_LABEL[existing.target_type]}: {existing.venue_name || existing.key_account_group_name || existing.jurisdiction_name || existing.channel_name}
+            </Typography.Paragraph>
+          ) : (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="targetType" label="Target" rules={[{ required: true }]}>
+                  <Select options={Object.entries(TARGET_LABEL).map(([value, label]) => ({ value, label }))} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                {targetType === 'VENUE' && (
+                  <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
+                    <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
+                  </Form.Item>
+                )}
+                {targetType === 'KEY_ACCOUNT_GROUP' && (
+                  <Form.Item name="keyAccountGroupId" label="Key account group" rules={[{ required: true }]}>
+                    <Select options={kags?.map((k) => ({ value: k.id, label: k.name }))} />
+                  </Form.Item>
+                )}
+                {targetType === 'JURISDICTION' && (
+                  <Form.Item name="jurisdictionId" label="Jurisdiction" rules={[{ required: true }]}>
+                    <Select options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
+                  </Form.Item>
+                )}
+                {targetType === 'CHANNEL' && (
+                  <Form.Item name="channelId" label="Channel" rules={[{ required: true }]}>
+                    <Select options={channels?.map((c) => ({ value: c.id, label: c.name }))} />
+                  </Form.Item>
+                )}
+              </Col>
+            </Row>
+          )}
+        </FormSection>
+
+        <FormSection title="Schedule window">
+          <Form.Item name="dates" label="Valid window" rules={[{ required: true }]} style={{ maxWidth: 440 }}>
+            <DatePicker.RangePicker style={{ width: '100%' }} />
+          </Form.Item>
+        </FormSection>
       </Form>
     </Card>
   );

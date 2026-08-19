@@ -16,7 +16,7 @@ export async function exportActivationChangesPdf(dateStr) {
   doc.on('data', (c) => chunks.push(c));
   const done = new Promise((resolve) => doc.on('end', () => resolve(Buffer.concat(chunks))));
   doc.fontSize(18).fillColor('#0060ac').text('Activation / Deactivation Report');
-  doc.fontSize(10).fillColor('#666666').text(`Report date: ${reportDate || 'today'}   ·   Generated: ${new Date().toISOString()}`);
+  doc.fontSize(10).fillColor('#666666').text(`Report date: ${reportDate || 'All dates'}   ·   Generated: ${new Date().toISOString()}`);
   doc.moveDown();
   doc.fontSize(13).fillColor('#333333').text(`Activations (${activations.length})`);
   doc.moveDown(0.5);
@@ -105,11 +105,13 @@ export async function activationChangesReport(dateStr) {
         SELECT 1 FROM venue_group_members vgm WHERE vgm.venue_group_id = p.venue_group_id AND vgm.venue_id = v.id
       ))
   `;
+  // No date given -> show every activation/deactivation on record (all-time), not just today's.
+  // A date is only used as an exact-day filter once the user explicitly picks one and generates.
   const activations = (await query(
     `SELECT v.id AS venue_id, v.name AS venue_name, v.code AS venue_code, p.id AS promotion_id, p.name AS promotion_name,
             p.start_date AS activation_date, 'Activated' AS status
      FROM promotions p ${scopeJoin}
-     WHERE p.status = 'ACTIVE' AND p.start_date = COALESCE($1::date, CURRENT_DATE)
+     WHERE p.status = 'ACTIVE' AND ($1::date IS NULL OR p.start_date = $1::date)
      ORDER BY v.name`,
     [date]
   )).rows;
@@ -118,7 +120,7 @@ export async function activationChangesReport(dateStr) {
     `SELECT v.id AS venue_id, v.name AS venue_name, v.code AS venue_code, p.id AS promotion_id, p.name AS promotion_name,
             p.end_date AS deactivation_date, 'Deactivated' AS status
      FROM promotions p ${scopeJoin}
-     WHERE p.status IN ('ACTIVE','COMPLETED') AND p.end_date = COALESCE($1::date, CURRENT_DATE)
+     WHERE p.status IN ('ACTIVE','COMPLETED') AND ($1::date IS NULL OR p.end_date = $1::date)
      ORDER BY v.name`,
     [date]
   )).rows;

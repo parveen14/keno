@@ -5,6 +5,7 @@ import { Card, Row, Col, Descriptions, Typography, Space, Rate, Form, Input, But
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import StatusTag from '../../components/StatusTag.jsx';
+import { FormSection } from '../../components/FormSection.jsx';
 
 // Venue-facing "rate this promotion" flow (UC11 "Ratings & Insights"), per the client's
 // 4-step reference mockup (steps 1 & 2). Per the client's explicit annotation, this
@@ -102,7 +103,15 @@ export default function RatePromotionPage() {
           <StatusTag status={promotion.status} />
         </Space>
       )}
-      extra={backButton}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          {backButton}
+          <Button type="primary" loading={submitMutation.isPending} onClick={() => form.submit()}>
+            Submit feedback
+          </Button>
+        </Space>
+      )}
     >
       <Alert
         type="info"
@@ -119,19 +128,18 @@ export default function RatePromotionPage() {
             form={form}
             onFinish={(values) => submitMutation.mutate(values)}
           >
-            <Form.Item
-              name="overallRating"
-              label={<Typography.Text strong>Overall, how would you rate this promotion?</Typography.Text>}
-              rules={[{ validator: (_, v) => (v ? Promise.resolve() : Promise.reject(new Error('Please give an overall rating'))) }]}
-            >
-              <Rate style={{ fontSize: 32 }} />
-            </Form.Item>
+            <FormSection title="Overall rating" first>
+              <Form.Item
+                name="overallRating"
+                label="Overall, how would you rate this promotion?"
+                rules={[{ validator: (_, v) => (v ? Promise.resolve() : Promise.reject(new Error('Please give an overall rating'))) }]}
+              >
+                <Rate style={{ fontSize: 32 }} />
+              </Form.Item>
+            </FormSection>
 
             {prizes.length > 0 && (
-              <>
-                <Typography.Title level={5} style={{ marginTop: 8 }}>
-                  How satisfied are you with the prizes?
-                </Typography.Title>
+              <FormSection title="How satisfied are you with the prizes?">
                 {prizes.map((prize) => (
                   <Form.Item
                     key={prize.id}
@@ -142,26 +150,19 @@ export default function RatePromotionPage() {
                     <Rate />
                   </Form.Item>
                 ))}
-              </>
+              </FormSection>
             )}
 
-            <Form.Item name="comments" label="Additional comments (optional)">
-              <Input.TextArea rows={4} placeholder="Anything else you'd like to share about this promotion?" />
-            </Form.Item>
-
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={submitMutation.isPending}
-              style={{ background: '#0060ac', borderColor: '#0060ac' }}
-            >
-              Submit feedback
-            </Button>
+            <FormSection title="Comments">
+              <Form.Item name="comments" label="Additional comments (optional)">
+                <Input.TextArea rows={4} placeholder="Anything else you'd like to share about this promotion?" />
+              </Form.Item>
+            </FormSection>
           </Form>
         </Col>
 
         <Col xs={24} md={9}>
-          <Card size="small" title="Promotion summary" style={{ background: '#fafafa' }}>
+          <Card size="small" title="Promotion summary" styles={{ header: { background: '#F5F8FB' } }} style={{ background: '#fafafa' }}>
             <Descriptions column={1} size="small">
               <Descriptions.Item label="Venue">{venue.name}</Descriptions.Item>
               <Descriptions.Item label="Key account group">{promotion.key_account_group_name || '—'}</Descriptions.Item>

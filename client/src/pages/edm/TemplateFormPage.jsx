@@ -5,6 +5,7 @@ import { Card, Form, Input, Button, Space, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
+import { FormSection } from '../../components/FormSection.jsx';
 
 export default function TemplateFormPage() {
   const { id } = useParams();
@@ -49,20 +50,26 @@ export default function TemplateFormPage() {
   return (
     <Card
       title={isEdit ? `Edit template: ${existing?.name || ''}` : 'New template'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/edm?tab=templates')}>Back to list</Button>}
-    >
-      <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 640 }}>
-        <Form.Item name="name" label="Template name" rules={[{ required: true }]}><Input placeholder="e.g. Monthly Venue Newsletter" /></Form.Item>
-        <Form.Item name="subjectTemplate" label="Subject line" rules={[{ required: true }]}>
-          <Input placeholder="e.g. Keno Venue Update — {{month}}" />
-        </Form.Item>
-        <Form.Item name="bodyHtmlTemplate" label="Body">
-          <RichTextEditor placeholder="Design the reusable email body... use {{placeholders}} for variable content" />
-        </Form.Item>
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
         <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>{isEdit ? 'Save changes' : 'Create template'}</Button>
-          <Button onClick={() => navigate('/edm?tab=templates')}>Cancel</Button>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/edm?tab=templates')}>Back to list</Button>
+          <Button type="primary" loading={saveMutation.isPending} onClick={() => form.submit()}>
+            {isEdit ? 'Save changes' : 'Create template'}
+          </Button>
         </Space>
+      )}
+    >
+      <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 720 }}>
+        <FormSection title="Template details" first>
+          <Form.Item name="name" label="Template name" rules={[{ required: true }]}><Input placeholder="e.g. Monthly Venue Newsletter" /></Form.Item>
+          <Form.Item name="subjectTemplate" label="Subject line" rules={[{ required: true }]}>
+            <Input placeholder="e.g. Keno Venue Update — {{month}}" />
+          </Form.Item>
+          <Form.Item name="bodyHtmlTemplate" label="Body">
+            <RichTextEditor placeholder="Design the reusable email body... use {{placeholders}} for variable content" />
+          </Form.Item>
+        </FormSection>
       </Form>
     </Card>
   );

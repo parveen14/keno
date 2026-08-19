@@ -47,8 +47,9 @@ export default function ReportingPage() {
   const queryClient = useQueryClient();
 
   // ---------- Tab 1: Activation/Deactivation report ----------
-  const [activationDateDraft, setActivationDateDraft] = useState(dayjs());
-  const [activationDate, setActivationDate] = useState(dayjs().format('YYYY-MM-DD'));
+  // Default to no date filter (shows all activations/deactivations on record), not just today's.
+  const [activationDateDraft, setActivationDateDraft] = useState(null);
+  const [activationDate, setActivationDate] = useState(undefined);
 
   const { data: activationReport, isLoading: loadingActivation, refetch: refetchActivation } = useQuery({
     queryKey: ['activation-changes', activationDate],
@@ -257,8 +258,8 @@ export default function ReportingPage() {
             <>
               <Space style={{ marginBottom: 16 }} wrap>
                 <span>Report date:</span>
-                <DatePicker value={activationDateDraft} onChange={(v) => setActivationDateDraft(v || dayjs())} allowClear={false} />
-                <Button type="primary" onClick={() => setActivationDate(activationDateDraft.format('YYYY-MM-DD'))} loading={loadingActivation}>
+                <DatePicker value={activationDateDraft} onChange={setActivationDateDraft} allowClear placeholder="All dates" />
+                <Button type="primary" onClick={() => setActivationDate(activationDateDraft ? activationDateDraft.format('YYYY-MM-DD') : undefined)} loading={loadingActivation}>
                   Generate report
                 </Button>
                 <Button icon={<DownloadOutlined />} onClick={() => downloadActivation('csv')}>Download CSV</Button>

@@ -255,6 +255,7 @@ export default function ReturnsPage() {
   return (
     <Card title="Returns / Damaged Goods (UC10)">
       <Tabs
+        defaultActiveKey="insights"
         items={[
           { key: 'requests', label: 'Requests', children: requestsTab },
           { key: 'insights', label: 'Insights', children: insightsTab },

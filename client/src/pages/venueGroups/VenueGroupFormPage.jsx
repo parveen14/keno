@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Input, DatePicker, Select, InputNumber, Button, Space, message } from 'antd';
+import { Card, Form, Input, DatePicker, Select, InputNumber, Button, Space, Row, Col, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
+import { FormSection } from '../../components/FormSection.jsx';
 
 export default function VenueGroupFormPage() {
   const { id } = useParams();
@@ -63,26 +64,45 @@ export default function VenueGroupFormPage() {
   return (
     <Card
       title={isEdit ? `Edit: ${existing?.name || ''}` : 'New venue group'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/venue-groups')}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/venue-groups')}>Back to list</Button>
+          <Button type="primary" loading={saveMutation.isPending} onClick={() => form.submit()}>
+            {isEdit ? 'Save changes' : 'Create group'}
+          </Button>
+        </Space>
+      )}
     >
       <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} initialValues={{ maxVenues: 10 }} style={{ maxWidth: 720 }}>
-        <Form.Item name="name" label="Group name" rules={[{ required: true }]}><Input /></Form.Item>
-        {!isEdit && (
-          <Form.Item name="promotionId" label="Linked promotion">
-            <Select allowClear options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
+        <FormSection title="Group details" first>
+          <Form.Item name="name" label="Group name" rules={[{ required: true }]}><Input /></Form.Item>
+          <Row gutter={16}>
+            {!isEdit && (
+              <Col span={12}>
+                <Form.Item name="promotionId" label="Linked promotion">
+                  <Select allowClear options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
+                </Form.Item>
+              </Col>
+            )}
+            <Col span={!isEdit ? 12 : 24}>
+              <Form.Item name="maxVenues" label="Max venues">
+                <InputNumber min={1} max={50} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="dates" label="Window" style={{ maxWidth: 440 }}>
+            <DatePicker.RangePicker style={{ width: '100%' }} />
           </Form.Item>
-        )}
-        <Form.Item name="maxVenues" label="Max venues"><InputNumber min={1} max={50} /></Form.Item>
-        <Form.Item name="dates" label="Window"><DatePicker.RangePicker style={{ width: '100%' }} /></Form.Item>
+        </FormSection>
+
         {!isEdit && (
-          <Form.Item name="venueIds" label="Invite venues">
-            <Select mode="multiple" showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-          </Form.Item>
+          <FormSection title="Invite venues">
+            <Form.Item name="venueIds" label="Invite venues">
+              <Select mode="multiple" showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
+            </Form.Item>
+          </FormSection>
         )}
-        <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>{isEdit ? 'Save changes' : 'Create group'}</Button>
-          <Button onClick={() => navigate('/venue-groups')}>Cancel</Button>
-        </Space>
       </Form>
     </Card>
   );

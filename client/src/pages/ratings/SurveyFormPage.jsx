@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Select, DatePicker, Switch, Button, Space, message } from 'antd';
+import { Card, Form, Select, DatePicker, Switch, Button, Space, message, Row, Col } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
+import { FormSection } from '../../components/FormSection.jsx';
 
 export default function SurveyFormPage() {
   const { id } = useParams();
@@ -69,35 +70,45 @@ export default function SurveyFormPage() {
   return (
     <Card
       title={isEdit ? `Edit survey: ${existing?.promotion_name || ''}` : 'New survey'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/ratings')}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/ratings')}>Back to list</Button>
+          <Button
+            type="primary"
+            loading={isEdit ? editSurveyMutation.isPending : createSurveyMutation.isPending}
+            onClick={() => form.submit()}
+          >
+            {isEdit ? 'Save changes' : 'Create'}
+          </Button>
+        </Space>
+      )}
     >
       <Form
         layout="vertical"
         form={form}
         onFinish={(v) => (isEdit ? editSurveyMutation.mutate(v) : createSurveyMutation.mutate(v))}
-        style={{ maxWidth: 480 }}
+        style={{ maxWidth: 720 }}
       >
-        {!isEdit && (
-          <Form.Item name="promotionId" label="Promotion" rules={[{ required: true }]}>
-            <Select showSearch optionFilterProp="label" options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
-          </Form.Item>
-        )}
-        <Form.Item name="dates" label="Survey window" rules={[{ required: true }]}>
-          <DatePicker.RangePicker style={{ width: '100%' }} />
-        </Form.Item>
-        <Form.Item name="isRequired" label="Required" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-        <Space>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={isEdit ? editSurveyMutation.isPending : createSurveyMutation.isPending}
-          >
-            {isEdit ? 'Save changes' : 'Create'}
-          </Button>
-          <Button onClick={() => navigate('/ratings')}>Cancel</Button>
-        </Space>
+        <FormSection title="Survey window" first>
+          {!isEdit && (
+            <Form.Item name="promotionId" label="Promotion" rules={[{ required: true }]}>
+              <Select showSearch optionFilterProp="label" options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
+            </Form.Item>
+          )}
+          <Row gutter={16}>
+            <Col span={16}>
+              <Form.Item name="dates" label="Opens / closes" rules={[{ required: true }]}>
+                <DatePicker.RangePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="isRequired" label="Required" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
+        </FormSection>
       </Form>
     </Card>
   );

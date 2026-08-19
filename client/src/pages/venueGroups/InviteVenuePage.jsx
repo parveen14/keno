@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, Form, Select, Button, Space, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
+import { FormSection } from '../../components/FormSection.jsx';
 
 export default function InviteVenuePage() {
   const { id } = useParams();
@@ -39,20 +40,24 @@ export default function InviteVenuePage() {
   return (
     <Card
       title={`Invite venue: ${group?.name || ''}`}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={backToGroup}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={backToGroup}>Back to list</Button>
+          <Button type="primary" loading={addMemberMutation.isPending} onClick={() => form.submit()}>Invite</Button>
+        </Space>
+      )}
     >
       <Form layout="vertical" form={form} onFinish={(v) => addMemberMutation.mutate(v.venueId)} style={{ maxWidth: 480 }}>
-        <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
-          <Select
-            showSearch
-            optionFilterProp="label"
-            options={venues?.filter((v) => !group?.members?.some((m) => m.venue_id === v.id)).map((v) => ({ value: v.id, label: v.name }))}
-          />
-        </Form.Item>
-        <Space>
-          <Button type="primary" htmlType="submit" loading={addMemberMutation.isPending}>Invite</Button>
-          <Button onClick={backToGroup}>Cancel</Button>
-        </Space>
+        <FormSection first>
+          <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
+            <Select
+              showSearch
+              optionFilterProp="label"
+              options={venues?.filter((v) => !group?.members?.some((m) => m.venue_id === v.id)).map((v) => ({ value: v.id, label: v.name }))}
+            />
+          </Form.Item>
+        </FormSection>
       </Form>
     </Card>
   );

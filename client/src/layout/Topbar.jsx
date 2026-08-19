@@ -13,7 +13,7 @@ export default function Topbar() {
   const { totalItems } = useCart();
 
   return (
-    <Layout.Header style={{ background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: '1px solid #f0f0f0' }}>
+    <Layout.Header style={{ background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
       <Typography.Title level={4} style={{ margin: 0, color: '#333333' }}>Venue Promotions Platform</Typography.Title>
       <Space size="middle">
         <Badge count={totalItems} size="small">

@@ -1,11 +1,12 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Input, InputNumber, Select, Button, Space, message, Alert, Typography, Upload } from 'antd';
+import { Card, Form, Input, InputNumber, Select, Button, Space, message, Alert, Typography, Upload, Row, Col } from 'antd';
 import { ArrowLeftOutlined, PlusOutlined, CloseCircleFilled } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
+import { FormSection } from '../../components/FormSection.jsx';
 
 const REASON_OPTIONS = ['DAMAGED', 'FAULTY', 'WRONG_ITEM', 'OTHER'].map((v) => ({ value: v, label: v.replaceAll('_', ' ') }));
 
@@ -139,7 +140,20 @@ export default function ReturnCaseFormPage() {
   return (
     <Card
       title={isEdit ? `Edit case: ${existing?.item_name || ''}` : 'New damaged goods / return request'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/returns')}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/returns')}>Back to list</Button>
+          <Button
+            type="primary"
+            loading={saveMutation.isPending}
+            disabled={isLocked || (!isEdit && !selectedItem)}
+            onClick={() => form.submit()}
+          >
+            {isEdit ? 'Save changes' : 'Submit request'}
+          </Button>
+        </Space>
+      )}
     >
       {!isEdit && <Typography.Paragraph type="secondary">Tell us what happened</Typography.Paragraph>}
       {isLocked && (
@@ -150,25 +164,30 @@ export default function ReturnCaseFormPage() {
           message="This case can no longer be edited — only cases with status LODGED are editable."
         />
       )}
-      <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 560 }} disabled={isLocked}>
+      <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 760 }} disabled={isLocked}>
         {!isEdit && (
-          <>
-            <Form.Item name="orderId" label="Order" rules={[{ required: true }]}>
-              <Select
-                placeholder="Select an order"
-                options={orderOptions}
-                onChange={handleOrderChange}
-              />
-            </Form.Item>
-
-            <Form.Item name="deliveryId" label="Delivery" rules={[{ required: true }]}>
-              <Select
-                placeholder={selectedOrderId ? 'Select a delivery' : 'Select an order first'}
-                options={dispatchOptions}
-                disabled={!selectedOrderId}
-                onChange={handleDeliveryChange}
-              />
-            </Form.Item>
+          <FormSection title="Order & delivery" first>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="orderId" label="Order" rules={[{ required: true }]}>
+                  <Select
+                    placeholder="Select an order"
+                    options={orderOptions}
+                    onChange={handleOrderChange}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="deliveryId" label="Delivery" rules={[{ required: true }]}>
+                  <Select
+                    placeholder={selectedOrderId ? 'Select a delivery' : 'Select an order first'}
+                    options={dispatchOptions}
+                    disabled={!selectedOrderId}
+                    onChange={handleDeliveryChange}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
 
             {selectedItem && (
               <Typography.Paragraph style={{ marginTop: -8 }}>
@@ -181,6 +200,7 @@ export default function ReturnCaseFormPage() {
               label="Quantity damaged"
               rules={[{ required: true }]}
               extra={selectedItem ? `Must be between 1 and ${selectedItem.quantity}` : undefined}
+              style={{ maxWidth: 240 }}
             >
               <InputNumber
                 min={1}
@@ -189,19 +209,21 @@ export default function ReturnCaseFormPage() {
                 disabled={!selectedItem}
               />
             </Form.Item>
-          </>
+          </FormSection>
         )}
 
-        <Form.Item name="reason" label="Reason" rules={[{ required: true }]}>
-          <Select options={REASON_OPTIONS} />
-        </Form.Item>
+        <FormSection title="Details" first={isEdit}>
+          <Form.Item name="reason" label="Reason" rules={[{ required: true }]} style={{ maxWidth: 320 }}>
+            <Select options={REASON_OPTIONS} />
+          </Form.Item>
 
-        <Form.Item name="notes" label="Description / notes">
-          <Input.TextArea rows={3} placeholder="Outer box was crushed and both units have stopped working." />
-        </Form.Item>
+          <Form.Item name="notes" label="Description / notes">
+            <Input.TextArea rows={3} placeholder="Outer box was crushed and both units have stopped working." />
+          </Form.Item>
+        </FormSection>
 
         {!isEdit && (
-          <Form.Item label="Photos / evidence">
+          <FormSection title="Photos / evidence">
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
               {stagedPhotos.map((p) => (
                 <div key={p.previewUrl} style={{ position: 'relative', width: 96, height: 96 }}>
@@ -223,20 +245,8 @@ export default function ReturnCaseFormPage() {
                 </div>
               </Upload>
             </div>
-          </Form.Item>
+          </FormSection>
         )}
-
-        <Space>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={saveMutation.isPending}
-            disabled={isLocked || (!isEdit && !selectedItem)}
-          >
-            {isEdit ? 'Save changes' : 'Submit request'}
-          </Button>
-          <Button onClick={() => navigate('/returns')}>Cancel</Button>
-        </Space>
       </Form>
     </Card>
   );

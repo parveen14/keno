@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Input, Select, Button, Space, message, Alert } from 'antd';
+import { Card, Form, Input, Select, Button, Space, Row, Col, message, Alert } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
+import { FormSection } from '../../components/FormSection.jsx';
 
 const AUDIENCE_LABEL = { JURISDICTION: 'Jurisdiction', CHANNEL: 'Channel', KEY_ACCOUNT_GROUP: 'Key account group', ALL: 'All venues' };
 const FILTER_KEY = { JURISDICTION: 'jurisdictionId', CHANNEL: 'channelId', KEY_ACCOUNT_GROUP: 'keyAccountGroupId' };
@@ -95,7 +96,15 @@ export default function CampaignFormPage() {
   return (
     <Card
       title={isEdit ? `Edit: ${existing?.subject || ''}` : 'New EDM campaign'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/edm')}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/edm')}>Back to list</Button>
+          <Button type="primary" loading={saveMutation.isPending} disabled={isEdit && !isDraft} onClick={() => form.submit()}>
+            {isEdit ? 'Save changes' : 'Create draft'}
+          </Button>
+        </Space>
+      )}
     >
       {isEdit && !isDraft && (
         <Alert
@@ -109,28 +118,33 @@ export default function CampaignFormPage() {
         layout="vertical"
         form={form}
         onFinish={(v) => saveMutation.mutate(v)}
-        style={{ maxWidth: 640 }}
+        style={{ maxWidth: 720 }}
         disabled={isEdit && !isDraft}
       >
-        <Form.Item name="edmTemplateId" label={isEdit ? 'Template' : 'Start from a template'}>
-          <Select allowClear placeholder="Optional — loads subject & body from the template" onChange={applyTemplate} options={templates?.map((t) => ({ value: t.id, label: t.name }))} />
-        </Form.Item>
-        <Form.Item name="subject" label="Subject" rules={[{ required: true }]}><Input /></Form.Item>
-        <Form.Item name="bodyHtml" label="Body" rules={[{ required: true }]}><RichTextEditor placeholder="Write the EDM body..." /></Form.Item>
-        <Form.Item name="audienceType" label="Audience" rules={[{ required: true }]}>
-          <Select options={Object.entries(AUDIENCE_LABEL).map(([value, label]) => ({ value, label }))} />
-        </Form.Item>
-        {audienceType && audienceType !== 'ALL' && (
-          <Form.Item name="audienceTarget" label={AUDIENCE_LABEL[audienceType]} rules={[{ required: true }]}>
-            <Select options={audienceTargetOptions(audienceType)} />
+        <FormSection title="Campaign details" first>
+          <Form.Item name="edmTemplateId" label={isEdit ? 'Template' : 'Start from a template'}>
+            <Select allowClear placeholder="Optional — loads subject & body from the template" onChange={applyTemplate} options={templates?.map((t) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
-        )}
-        <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending} disabled={isEdit && !isDraft}>
-            {isEdit ? 'Save changes' : 'Create draft'}
-          </Button>
-          <Button onClick={() => navigate('/edm')}>Cancel</Button>
-        </Space>
+          <Form.Item name="subject" label="Subject" rules={[{ required: true }]}><Input /></Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="audienceType" label="Audience" rules={[{ required: true }]}>
+                <Select options={Object.entries(AUDIENCE_LABEL).map(([value, label]) => ({ value, label }))} />
+              </Form.Item>
+            </Col>
+            {audienceType && audienceType !== 'ALL' && (
+              <Col span={12}>
+                <Form.Item name="audienceTarget" label={AUDIENCE_LABEL[audienceType]} rules={[{ required: true }]}>
+                  <Select options={audienceTargetOptions(audienceType)} />
+                </Form.Item>
+              </Col>
+            )}
+          </Row>
+        </FormSection>
+
+        <FormSection title="Message content">
+          <Form.Item name="bodyHtml" label="Body" rules={[{ required: true }]}><RichTextEditor placeholder="Write the EDM body..." /></Form.Item>
+        </FormSection>
       </Form>
     </Card>
   );

@@ -5,25 +5,27 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import Topbar from './Topbar.jsx';
 
+const SIDER_NAVY = '#062B45';
+
 export default function AppShell() {
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Layout.Sider width={260} style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '20px 16px' }}>
-          <img src="/brand/keno-logo.png" alt="Keno" style={{ height: 76, maxWidth: '100%' }} />
+      <Layout.Sider width={260} style={{ background: SIDER_NAVY, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
+          <img src="/brand/keno-logo-reversed.png" alt="Keno" style={{ height: 76, maxWidth: '100%' }} />
         </div>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
           <Sidebar />
         </div>
-        <div style={{ padding: 16, borderTop: '1px solid #f0f0f0' }}>
-          <Button block icon={<GlobalOutlined />} onClick={() => window.open('/public', '_blank')}>
+        <div style={{ padding: 16, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+          <Button block ghost icon={<GlobalOutlined />} onClick={() => window.open('/public', '_blank')}>
             Public report link
           </Button>
         </div>
       </Layout.Sider>
       <Layout>
-        <div className="keno-accent-bar" />
         <Topbar />
+        <div className="keno-accent-bar" />
         <Layout.Content style={{ padding: 24, background: '#f5f6fa' }}>
           <Outlet />
         </Layout.Content>

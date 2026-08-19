@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Select, InputNumber, Input, DatePicker, Button, Space, message } from 'antd';
+import { Card, Form, Select, InputNumber, Input, DatePicker, Button, Space, Row, Col, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
+import { FormSection } from '../../components/FormSection.jsx';
 
 export default function WinEventFormPage() {
   const { id } = useParams();
@@ -56,28 +57,48 @@ export default function WinEventFormPage() {
   return (
     <Card
       title={isEdit ? 'Edit win event' : 'Log a win'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/celebrate-win')}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/celebrate-win')}>Back to list</Button>
+          <Button type="primary" loading={saveMutation.isPending} onClick={() => form.submit()}>
+            {isEdit ? 'Save changes' : 'Log win'}
+          </Button>
+        </Space>
+      )}
     >
       <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 720 }}>
-        {!isEdit && (
-          <Form.Item name="promotionId" label="Promotion" rules={[{ required: true }]}>
-            <Select options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
-          </Form.Item>
-        )}
-        <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
-          <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-        </Form.Item>
-        <Form.Item name="prizeAmount" label="Prize amount" rules={[{ required: true }]}>
-          <InputNumber min={1} style={{ width: '100%' }} prefix="$" />
-        </Form.Item>
-        <Form.Item name="spotNumber" label="Spot number"><Input /></Form.Item>
-        <Form.Item name="winDate" label="Win date" rules={[{ required: true }]} initialValue={!isEdit ? dayjs() : undefined}>
-          <DatePicker style={{ width: '100%' }} />
-        </Form.Item>
-        <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>{isEdit ? 'Save changes' : 'Log win'}</Button>
-          <Button onClick={() => navigate('/celebrate-win')}>Cancel</Button>
-        </Space>
+        <FormSection title="Win details" first>
+          <Row gutter={16}>
+            {!isEdit && (
+              <Col span={12}>
+                <Form.Item name="promotionId" label="Promotion" rules={[{ required: true }]}>
+                  <Select options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
+                </Form.Item>
+              </Col>
+            )}
+            <Col span={isEdit ? 24 : 12}>
+              <Form.Item name="venueId" label="Venue" rules={[{ required: true }]}>
+                <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item name="prizeAmount" label="Prize amount" rules={[{ required: true }]}>
+                <InputNumber min={1} style={{ width: '100%' }} prefix="$" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="spotNumber" label="Spot number"><Input /></Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="winDate" label="Win date" rules={[{ required: true }]} initialValue={!isEdit ? dayjs() : undefined}>
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+        </FormSection>
       </Form>
     </Card>
   );

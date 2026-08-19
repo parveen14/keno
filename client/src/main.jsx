@@ -24,6 +24,18 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
           borderRadius: 8,
         },
+        components: {
+          Menu: {
+            darkItemBg: 'transparent',
+            darkSubMenuItemBg: 'transparent',
+            darkItemColor: 'rgba(255,255,255,0.65)',
+            darkItemHoverBg: 'rgba(255,255,255,0.06)',
+            darkItemHoverColor: '#ffffff',
+            darkItemSelectedBg: 'rgba(0,174,239,0.16)',
+            darkItemSelectedColor: '#ffffff',
+            darkGroupTitleColor: 'rgba(255,255,255,0.35)',
+          },
+        },
       }}
     >
       <QueryClientProvider client={queryClient}>

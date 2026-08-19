@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Input, Select, InputNumber, Button, Space, message } from 'antd';
+import { Card, Form, Input, Select, InputNumber, Button, Space, Row, Col, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import FileUploadField from '../../components/FileUploadField.jsx';
+import { FormSection } from '../../components/FormSection.jsx';
 
 export default function CatalogueItemFormPage() {
   const { id } = useParams();
@@ -58,32 +59,61 @@ export default function CatalogueItemFormPage() {
   return (
     <Card
       title={isEdit ? `Edit: ${existing?.name || ''}` : 'New catalogue item'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/catalogue')}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/catalogue')}>Back to list</Button>
+          <Button type="primary" loading={saveMutation.isPending} onClick={() => form.submit()}>
+            {isEdit ? 'Save changes' : 'Create'}
+          </Button>
+        </Space>
+      )}
     >
       <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 720 }}>
-        {!isEdit && (
-          <Form.Item name="sku" label="SKU" rules={[{ required: true }]}><Input /></Form.Item>
-        )}
-        <Form.Item name="name" label="Name" rules={[{ required: true }]}><Input /></Form.Item>
-        <Form.Item name="description" label="Description"><Input.TextArea rows={2} /></Form.Item>
-        <Form.Item name="category" label="Category" rules={[{ required: true }]}><Input /></Form.Item>
-        <Form.Item name="tier" label="Tier" rules={[{ required: true }]}>
-          <Select options={['Bronze', 'Silver', 'Gold', 'Platinum'].map((t) => ({ value: t, label: t }))} />
-        </Form.Item>
-        <Form.Item name="unitPrice" label="Unit price" rules={[{ required: true }]}>
-          <InputNumber min={0} style={{ width: '100%' }} prefix="$" />
-        </Form.Item>
-        <Form.Item name="pointsValue" label="Points price" tooltip="Shown in the catalogue/cart as the redeemable points cost. Defaults to 10x the unit price if left blank.">
-          <InputNumber min={0} style={{ width: '100%' }} placeholder="Auto (10x unit price)" />
-        </Form.Item>
-        <Form.Item name="imageUrl" label="Product image"><FileUploadField accept="image/*" buttonText="Upload image" /></Form.Item>
-        {isEdit && (
-          <Form.Item name="isActive" label="Active"><Select options={[{ value: true, label: 'Active' }, { value: false, label: 'Inactive' }]} /></Form.Item>
-        )}
-        <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>{isEdit ? 'Save changes' : 'Create'}</Button>
-          <Button onClick={() => navigate('/catalogue')}>Cancel</Button>
-        </Space>
+        <FormSection first>
+          <Row gutter={16}>
+            {!isEdit && (
+              <Col span={12}>
+                <Form.Item name="sku" label="SKU" rules={[{ required: true }]}><Input /></Form.Item>
+              </Col>
+            )}
+            <Col span={isEdit ? 24 : 12}>
+              <Form.Item name="name" label="Name" rules={[{ required: true }]}><Input /></Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="description" label="Description"><Input.TextArea rows={2} /></Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="category" label="Category" rules={[{ required: true }]}><Input /></Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="tier" label="Tier" rules={[{ required: true }]}>
+                <Select options={['Bronze', 'Silver', 'Gold', 'Platinum'].map((t) => ({ value: t, label: t }))} />
+              </Form.Item>
+            </Col>
+          </Row>
+        </FormSection>
+
+        <FormSection title="Pricing & stock">
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="unitPrice" label="Unit price" rules={[{ required: true }]}>
+                <InputNumber min={0} style={{ width: '100%' }} prefix="$" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="pointsValue" label="Points price" tooltip="Shown in the catalogue/cart as the redeemable points cost. Defaults to 10x the unit price if left blank.">
+                <InputNumber min={0} style={{ width: '100%' }} placeholder="Auto (10x unit price)" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="imageUrl" label="Product image"><FileUploadField accept="image/*" buttonText="Upload image" /></Form.Item>
+          {isEdit && (
+            <Form.Item name="isActive" label="Active" style={{ maxWidth: 220 }}>
+              <Select options={[{ value: true, label: 'Active' }, { value: false, label: 'Inactive' }]} />
+            </Form.Item>
+          )}
+        </FormSection>
       </Form>
     </Card>
   );

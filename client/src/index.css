@@ -12,9 +12,36 @@ body {
   color: #333333;
 }
 
+/* Brand heading treatment: bold weight + slight letter-spacing approximates the
+   brand guideline's TNorth Bold display face (not licensed for web use here). */
+.ant-card-head-title, h1, h2, h3, h4, h5,
+.ant-typography h1, .ant-typography h2, .ant-typography h3, .ant-typography h4, .ant-typography h5 {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 .keno-accent-bar {
   height: 4px;
   background: linear-gradient(90deg, #ec008c, #f04e23, #fff200, #00853a, #00aeef, #522e91);
+}
+
+/* Dark sidebar nav — selected item gets a Keno-blue left accent, matching the
+   left-border-accent pattern used for selected rows elsewhere in the app. */
+.ant-layout-sider .ant-menu-dark .ant-menu-item-group-title {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.ant-layout-sider .ant-menu-dark .ant-menu-item {
+  margin: 2px 12px !important;
+  width: calc(100% - 24px) !important;
+  border-radius: 6px !important;
+}
+.ant-layout-sider .ant-menu-dark .ant-menu-item-selected {
+  background: #0060ac !important;
+  font-weight: 600;
 }
 
 .keno-rte-content {

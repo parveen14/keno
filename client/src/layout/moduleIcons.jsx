@@ -1,12 +1,13 @@
 import React from 'react';
 import {
-  TagsOutlined, FileImageOutlined, CheckCircleOutlined, TeamOutlined, MailOutlined,
+  HomeOutlined, TagsOutlined, FileImageOutlined, CheckCircleOutlined, TeamOutlined, MailOutlined,
   BankOutlined, GiftOutlined, CarOutlined, TrophyOutlined, RollbackOutlined,
   FileTextOutlined, StarOutlined, BarChartOutlined,
 } from '@ant-design/icons';
 
 // One icon per module, keyed by route path -- shared by the Sidebar and the Dashboard's module grid.
 export const MODULE_ICONS = {
+  '/': HomeOutlined,
   '/promotions': TagsOutlined,
   '/content': FileImageOutlined,
   '/approvals': CheckCircleOutlined,

@@ -1,11 +1,12 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Input, Select, Checkbox, Button, Space, message } from 'antd';
+import { Card, Form, Input, Select, Checkbox, Button, Space, Row, Col, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
 import FileUploadField from '../../components/FileUploadField.jsx';
+import { FormSection } from '../../components/FormSection.jsx';
 
 const CONTENT_TYPE_OPTIONS = [
   { value: 'POSTER', label: 'Poster' },
@@ -62,41 +63,58 @@ export default function ContentItemFormPage() {
   return (
     <Card
       title={isEdit ? `Edit: ${existing?.title || ''}` : 'New content item'}
-      extra={<Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/content')}>Back to list</Button>}
+      styles={{ header: { background: '#F5F8FB' } }}
+      extra={(
+        <Space>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/content')}>Back to list</Button>
+          <Button type="primary" loading={saveMutation.isPending} onClick={() => form.submit()}>
+            {isEdit ? 'Save changes' : 'Create'}
+          </Button>
+        </Space>
+      )}
     >
       <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 720 }}>
-        <Form.Item name="title" label="Title" rules={[{ required: true }]}><Input /></Form.Item>
-        <Form.Item name="contentType" label="Type" rules={[{ required: true }]}>
-          <Select options={CONTENT_TYPE_OPTIONS} />
-        </Form.Item>
-        <Form.Item name="bodyHtml" label="Body"><RichTextEditor placeholder="Write the content body..." /></Form.Item>
+        <FormSection first>
+          <Form.Item name="title" label="Title" rules={[{ required: true }]}><Input /></Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="contentType" label="Type" rules={[{ required: true }]}>
+                <Select options={CONTENT_TYPE_OPTIONS} />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="bodyHtml" label="Body"><RichTextEditor placeholder="Write the content body..." /></Form.Item>
+        </FormSection>
 
-        {contentType === 'BANNER' ? (
-          <Form.Item name="fileUrl" label="Banner image">
-            <FileUploadField accept="image/*" buttonText="Upload banner" />
+        <FormSection title="Media">
+          {contentType === 'BANNER' ? (
+            <Form.Item name="fileUrl" label="Banner image">
+              <FileUploadField accept="image/*" buttonText="Upload banner" />
+            </Form.Item>
+          ) : (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="fileUrl" label="File">
+                  <FileUploadField accept="*" buttonText="Upload file" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="thumbnailUrl" label="Thumbnail image">
+                  <FileUploadField accept="image/*" buttonText="Upload thumbnail" />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
+        </FormSection>
+
+        <FormSection title="Compliance & visibility">
+          <Form.Item name="jurisdictionId" label="Jurisdiction" style={{ maxWidth: 360 }}>
+            <Select allowClear options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
           </Form.Item>
-        ) : (
-          <>
-            <Form.Item name="fileUrl" label="File">
-              <FileUploadField accept="*" buttonText="Upload file" />
-            </Form.Item>
-            <Form.Item name="thumbnailUrl" label="Thumbnail image">
-              <FileUploadField accept="image/*" buttonText="Upload thumbnail" />
-            </Form.Item>
-          </>
-        )}
-
-        <Form.Item name="jurisdictionId" label="Jurisdiction">
-          <Select allowClear options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
-        </Form.Item>
-        <Form.Item name="isComplianceLocked" valuePropName="checked">
-          <Checkbox>Lock as mandatory compliance content</Checkbox>
-        </Form.Item>
-
-        <Space>
-          <Button type="primary" htmlType="submit" loading={saveMutation.isPending}>{isEdit ? 'Save changes' : 'Create'}</Button>
-          <Button onClick={() => navigate('/content')}>Cancel</Button>
-        </Space>
+          <Form.Item name="isComplianceLocked" valuePropName="checked">
+            <Checkbox>Lock as mandatory compliance content</Checkbox>
+          </Form.Item>
+        </FormSection>
       </Form>
     </Card>
   );
