@@ -257,26 +257,26 @@ FROM venues v WHERE v.jurisdiction_id = (SELECT id FROM jurisdictions WHERE code
 -- ============================================================
 
 INSERT INTO prize_catalogue_items (sku, name, category, tier, unit_price) VALUES
-  ('ELEC-SPKR-01', 'Bluetooth Speaker', 'Electronics', 'Bronze', 49.00),
-  ('ELEC-EBUD-01', 'Wireless Earbuds', 'Electronics', 'Silver', 89.00),
-  ('ELEC-STRM-01', '4K Streaming Stick', 'Electronics', 'Bronze', 59.00),
-  ('ELEC-WATCH-01', 'Smart Watch', 'Electronics', 'Gold', 299.00),
-  ('ELEC-PROJ-01', 'Portable Projector', 'Electronics', 'Platinum', 399.00),
-  ('ELEC-DRONE-01', 'Drone Starter Kit', 'Electronics', 'Platinum', 349.00),
-  ('HOME-ESPR-01', 'Espresso Machine', 'Homeware', 'Gold', 249.00),
-  ('HOME-FRYR-01', 'Air Fryer', 'Homeware', 'Silver', 129.00),
-  ('HOME-VAC-01', 'Robot Vacuum', 'Homeware', 'Platinum', 449.00),
-  ('HOME-WINE-01', 'Wine Fridge', 'Homeware', 'Platinum', 599.00),
-  ('OUT-BBQ-01', 'Cast Iron BBQ Set', 'Outdoor', 'Silver', 99.00),
-  ('OUT-CHAIR-01', 'Camping Chair Pair', 'Outdoor', 'Bronze', 69.00),
-  ('OUT-COOL-01', 'Insulated Cooler 40L', 'Outdoor', 'Gold', 179.00),
-  ('OUT-TUMB-01', 'Yeti-style Tumbler Set', 'Outdoor', 'Bronze', 45.00),
-  ('GIFT-FUEL-01', '$50 Fuel Gift Card', 'Gift Cards', 'Bronze', 50.00),
-  ('GIFT-SUPER-01', '$100 Supermarket Gift Card', 'Gift Cards', 'Silver', 100.00),
-  ('GIFT-TRAVEL-01', '$250 Travel Gift Card', 'Gift Cards', 'Gold', 250.00),
-  ('APP-POLO-01', 'Branded Polo Shirt', 'Apparel', 'Bronze', 39.00),
-  ('APP-PUFFER-01', 'Branded Puffer Jacket', 'Apparel', 'Silver', 89.00),
-  ('APP-BAG-01', 'Leather Weekend Bag', 'Apparel', 'Gold', 199.00);
+  ('JBL-FLIP6-01', 'Portable Bluetooth Speaker', 'Electronics', 'Bronze', 49.00),
+  ('SONY-EARBUDS-01', 'Wireless Sport Earbuds', 'Electronics', 'Silver', 89.00),
+  ('GOOGLE-CHROMECAST-01', '4K Streaming Device', 'Electronics', 'Bronze', 59.00),
+  ('RACE-READY-01', 'Race Ready Pack', 'Electronics', 'Gold', 299.00),
+  ('LASER-PROJECTOR-01', 'Laser Projector Bundle', 'Electronics', 'Platinum', 399.00),
+  ('RYOBI-DIY-01', 'Ryobi DIY Starter Kit', 'Electronics', 'Platinum', 349.00),
+  ('NINJA-SLUSHI-01', 'Ninja - Slushi', 'Homeware', 'Gold', 249.00),
+  ('NINJA-GRILLFRYER-01', 'Ninja Smart XL Grill & Air Fryer', 'Homeware', 'Silver', 129.00),
+  ('IROBOT-ROOMBA-01', 'Smart Robot Vacuum', 'Homeware', 'Platinum', 449.00),
+  ('WEBER-BABYQ-01', 'Weber BabyQ', 'Homeware', 'Platinum', 599.00),
+  ('WEBER-BURGER-01', 'Weber Burger Pack', 'Outdoor', 'Silver', 99.00),
+  ('PICNIC-PACK-01', 'Picnic Pack', 'Outdoor', 'Bronze', 69.00),
+  ('NINJA-FROSTVAULT-01', 'Ninja Frostvault 47L', 'Outdoor', 'Gold', 179.00),
+  ('RYOBI-YARDKIT-01', 'Ryobi Yard Maintenance Kit', 'Outdoor', 'Bronze', 45.00),
+  ('GIFT-BP-01', '$50 BP Fuel Card', 'Gift Cards', 'Bronze', 50.00),
+  ('GIFT-BUNNINGS-01', '$100 Bunnings E-Gift Card', 'Gift Cards', 'Silver', 100.00),
+  ('GIFT-FLIGHTCENTRE-01', '$250 Getaway Gift Card', 'Gift Cards', 'Gold', 250.00),
+  ('NIKE-POLO-01', 'Branded Polo Tee', 'Apparel', 'Bronze', 39.00),
+  ('KATHMANDU-PUFFER-01', 'Embroidered Puffer Jacket', 'Apparel', 'Silver', 89.00),
+  ('RMW-WEEKENDER-01', 'Leather Overnight Bag', 'Apparel', 'Gold', 199.00);
 
 -- Points price defaults to 10 points per dollar (matches the loyalty-catalogue reference: "1,500 points - RRP $129.00").
 UPDATE prize_catalogue_items SET points_value = round(unit_price * 10);
@@ -286,11 +286,11 @@ UPDATE prize_catalogue_items SET points_value = round(unit_price * 10);
 INSERT INTO promotion_prizes (promotion_id, prize_catalogue_item_id, slot_label, sort_order)
 SELECT (SELECT id FROM promotions WHERE name='Ballarat Club Winter Prize Giveaway'), pci.id, slot.label, slot.sort_order
 FROM (VALUES
-  ('HOME-VAC-01', 'Major Prize', 0),
-  ('ELEC-WATCH-01', 'Minor Prize 1', 1),
-  ('HOME-FRYR-01', 'Minor Prize 2', 2),
-  ('OUT-COOL-01', 'Minor Prize 3', 3),
-  ('ELEC-EBUD-01', 'Minor Prize 4', 4)
+  ('IROBOT-ROOMBA-01', 'Major Prize', 0),
+  ('RACE-READY-01', 'Minor Prize 1', 1),
+  ('NINJA-GRILLFRYER-01', 'Minor Prize 2', 2),
+  ('NINJA-FROSTVAULT-01', 'Minor Prize 3', 3),
+  ('SONY-EARBUDS-01', 'Minor Prize 4', 4)
 ) AS slot(sku, label, sort_order)
 JOIN prize_catalogue_items pci ON pci.sku = slot.sku;
 
@@ -303,18 +303,18 @@ INSERT INTO warehouses (name, jurisdiction_id) VALUES
 INSERT INTO warehouse_stock (warehouse_id, prize_catalogue_item_id, soh_qty, committed_qty)
 SELECT w.id, pci.id, 40, 0
 FROM warehouses w CROSS JOIN prize_catalogue_items pci
-WHERE pci.sku NOT IN ('ELEC-PROJ-01', 'ELEC-DRONE-01');
+WHERE pci.sku NOT IN ('LASER-PROJECTOR-01', 'RYOBI-DIY-01');
 
 -- Portable Projector: low stock, no ETA needed (still available)
 INSERT INTO warehouse_stock (warehouse_id, prize_catalogue_item_id, soh_qty, committed_qty)
-SELECT w.id, (SELECT id FROM prize_catalogue_items WHERE sku='ELEC-PROJ-01'), 2, 0 FROM warehouses w;
+SELECT w.id, (SELECT id FROM prize_catalogue_items WHERE sku='LASER-PROJECTOR-01'), 2, 0 FROM warehouses w;
 
 -- Drone Starter Kit: out of stock with an ETA and a substitute -- UC8 low-stock/substitution demo
 INSERT INTO warehouse_stock (warehouse_id, prize_catalogue_item_id, soh_qty, committed_qty, restock_eta_date)
-SELECT w.id, (SELECT id FROM prize_catalogue_items WHERE sku='ELEC-DRONE-01'), 0, 0, CURRENT_DATE + 14 FROM warehouses w;
+SELECT w.id, (SELECT id FROM prize_catalogue_items WHERE sku='RYOBI-DIY-01'), 0, 0, CURRENT_DATE + 14 FROM warehouses w;
 
 INSERT INTO substitution_options (prize_catalogue_item_id, substitute_item_id, note) VALUES
-  ((SELECT id FROM prize_catalogue_items WHERE sku='ELEC-DRONE-01'), (SELECT id FROM prize_catalogue_items WHERE sku='ELEC-PROJ-01'), 'Similar tier electronics prize, in stock now.');
+  ((SELECT id FROM prize_catalogue_items WHERE sku='RYOBI-DIY-01'), (SELECT id FROM prize_catalogue_items WHERE sku='LASER-PROJECTOR-01'), 'Similar tier electronics prize, in stock now.');
 
 INSERT INTO freight_charges (zone, min_qty, max_qty, rate) VALUES
   ('Small', 0, 5, 9.00),
@@ -326,7 +326,7 @@ INSERT INTO orders (venue_id, promotion_id, order_type, po_reference, status, pl
   ((SELECT id FROM venues WHERE code='NSW-HOTEL-01'), NULL, 'STANDARD', 'PO-1001', 'DELIVERED',
    (SELECT id FROM users WHERE email='admin@keno-demo.example'), (SELECT id FROM freight_charges WHERE zone='Standard'), now() - interval '20 days');
 INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, warehouse_id)
-  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='ELEC-SPKR-01'), 10, 49.00, (SELECT id FROM warehouses WHERE name='Sydney DC')
+  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='JBL-FLIP6-01'), 10, 49.00, (SELECT id FROM warehouses WHERE name='Sydney DC')
   FROM orders o WHERE o.po_reference='PO-1001';
 INSERT INTO warehouse_dispatches (order_item_id, warehouse_id, quantity, consignment_ref, courier_name, status, tracking_events, dispatched_at)
   SELECT oi.id, (SELECT id FROM warehouses WHERE name='Sydney DC'), 10, 'CN-1001', 'StarTrack', 'DELIVERED',
@@ -344,7 +344,7 @@ INSERT INTO orders (venue_id, promotion_id, order_type, po_reference, status, pl
   ((SELECT id FROM venues WHERE code='QLD-CLUB-01'), NULL, 'STANDARD', 'PO-1002', 'SHIPPED',
    (SELECT id FROM users WHERE email='admin@keno-demo.example'), (SELECT id FROM freight_charges WHERE zone='Small'), now() - interval '8 days');
 INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, warehouse_id)
-  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='HOME-FRYR-01'), 5, 129.00, (SELECT id FROM warehouses WHERE name='Brisbane DC')
+  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='NINJA-GRILLFRYER-01'), 5, 129.00, (SELECT id FROM warehouses WHERE name='Brisbane DC')
   FROM orders o WHERE o.po_reference='PO-1002';
 INSERT INTO warehouse_dispatches (order_item_id, warehouse_id, quantity, consignment_ref, courier_name, status, tracking_events, dispatched_at)
   SELECT oi.id, (SELECT id FROM warehouses WHERE name='Brisbane DC'), 5, 'CN-1002', 'Australia Post', 'SHIPPED',
@@ -361,7 +361,7 @@ INSERT INTO orders (venue_id, promotion_id, order_type, po_reference, status, pl
   ((SELECT id FROM venues WHERE code='VIC-CLUB-01'), NULL, 'STANDARD', 'PO-1003', 'PACKED',
    (SELECT id FROM users WHERE email='admin@keno-demo.example'), (SELECT id FROM freight_charges WHERE zone='Small'), now() - interval '3 days');
 INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, warehouse_id)
-  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='ELEC-EBUD-01'), 8, 89.00, (SELECT id FROM warehouses WHERE name='Melbourne DC')
+  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='SONY-EARBUDS-01'), 8, 89.00, (SELECT id FROM warehouses WHERE name='Melbourne DC')
   FROM orders o WHERE o.po_reference='PO-1003';
 INSERT INTO warehouse_dispatches (order_item_id, warehouse_id, quantity, consignment_ref, courier_name, status, tracking_events)
   SELECT oi.id, (SELECT id FROM warehouses WHERE name='Melbourne DC'), 8, 'CN-1003', 'StarTrack', 'PACKED',
@@ -377,7 +377,7 @@ INSERT INTO orders (venue_id, promotion_id, order_type, po_reference, status, pl
   ((SELECT id FROM venues WHERE code='NSW-BOWLS-01'), (SELECT id FROM promotions WHERE name='Bowls Clubs Pilot Activation'), 'STANDARD', 'PO-1004', 'PACKED',
    (SELECT id FROM users WHERE email='venue.anchor@keno-demo.example'), (SELECT id FROM freight_charges WHERE zone='Small'), now() - interval '1 day');
 INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, warehouse_id)
-  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='OUT-CHAIR-01'), 4, 69.00, (SELECT id FROM warehouses WHERE name='Sydney DC')
+  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='PICNIC-PACK-01'), 4, 69.00, (SELECT id FROM warehouses WHERE name='Sydney DC')
   FROM orders o WHERE o.po_reference='PO-1004';
 INSERT INTO warehouse_dispatches (order_item_id, warehouse_id, quantity, consignment_ref, courier_name, status, tracking_events)
   SELECT oi.id, (SELECT id FROM warehouses WHERE name='Sydney DC'), 4, 'CN-1004', 'StarTrack', 'PACKED',
@@ -393,7 +393,7 @@ INSERT INTO orders (venue_id, promotion_id, order_type, po_reference, status, pl
   ((SELECT id FROM venues WHERE code='QLD-HOTEL-01'), NULL, 'STANDARD', 'PO-1005', 'SHIPPED',
    (SELECT id FROM users WHERE email='admin@keno-demo.example'), (SELECT id FROM freight_charges WHERE zone='Standard'), now() - interval '6 days');
 INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, warehouse_id)
-  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='OUT-TUMB-01'), 10, 45.00, (SELECT id FROM warehouses WHERE name='Brisbane DC')
+  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='RYOBI-YARDKIT-01'), 10, 45.00, (SELECT id FROM warehouses WHERE name='Brisbane DC')
   FROM orders o WHERE o.po_reference='PO-1005';
 INSERT INTO warehouse_dispatches (order_item_id, warehouse_id, quantity, consignment_ref, courier_name, status, tracking_events, dispatched_at)
   SELECT oi.id, (SELECT id FROM warehouses WHERE name='Brisbane DC'), 6, 'CN-1005-A', 'Australia Post', 'DELIVERED',
@@ -421,7 +421,7 @@ INSERT INTO orders (venue_id, key_account_group_id, promotion_id, order_type, po
    (SELECT id FROM freight_charges WHERE zone='Bulk'), now() - interval '2 days');
 UPDATE orders SET discount_rate = (SELECT discount_rate FROM key_account_groups WHERE name='Metro Clubs Alliance') WHERE po_reference='PO-BULK-2001';
 INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, warehouse_id)
-  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='HOME-ESPR-01'), 25, 249.00, (SELECT id FROM warehouses WHERE name='Melbourne DC')
+  SELECT o.id, (SELECT id FROM prize_catalogue_items WHERE sku='NINJA-SLUSHI-01'), 25, 249.00, (SELECT id FROM warehouses WHERE name='Melbourne DC')
   FROM orders o WHERE o.po_reference='PO-BULK-2001';
 INSERT INTO warehouse_dispatches (order_item_id, warehouse_id, quantity, consignment_ref, courier_name, status, tracking_events)
   SELECT oi.id, (SELECT id FROM warehouses WHERE name='Melbourne DC'), 25, 'CN-2001', 'TNT', 'PACKED',
@@ -566,7 +566,7 @@ INSERT INTO promotion_surveys (promotion_id, opens_at, closes_at, is_required)
 -- data to rate/aggregate, matching the client's "rate each prize within the promotion" mockup.
 INSERT INTO promotion_prizes (promotion_id, prize_catalogue_item_id, slot_label, sort_order)
 SELECT (SELECT id FROM promotions WHERE name='QLD Winter Prize Giveaway'), pci.id, slot.label, slot.sort_order
-FROM (VALUES ('Prize 1', 0, 'ELEC-SPKR-01'), ('Prize 2', 1, 'GIFT-SUPER-01'), ('Prize 3', 2, 'OUT-TUMB-01')) AS slot(label, sort_order, sku)
+FROM (VALUES ('Prize 1', 0, 'JBL-FLIP6-01'), ('Prize 2', 1, 'GIFT-BUNNINGS-01'), ('Prize 3', 2, 'RYOBI-YARDKIT-01')) AS slot(label, sort_order, sku)
 JOIN prize_catalogue_items pci ON pci.sku = slot.sku;
 
 INSERT INTO promotion_ratings (promotion_survey_id, venue_id, overall_rating, comments, submitted_at)
