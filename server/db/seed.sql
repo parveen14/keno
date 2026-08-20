@@ -22,20 +22,20 @@ INSERT INTO key_account_groups (name, description, discount_rate) VALUES
 
 -- 18 venues: 3 jurisdictions x 3 channels x 2 venues
 INSERT INTO venues (name, code, jurisdiction_id, channel_id, key_account_group_id, address, contact_name, contact_email, is_active) VALUES
-  ('The Anchor Hotel', 'NSW-HOTEL-01', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='HOTEL'), (SELECT id FROM key_account_groups WHERE name='Coastal Hotels Group'), '12 Harbour St, Sydney NSW', 'Dana Reed', 'dana.reed@anchorhotel.example', true),
-  ('Riverside Hotel', 'NSW-HOTEL-02', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='HOTEL'), (SELECT id FROM key_account_groups WHERE name='Coastal Hotels Group'), '88 River Rd, Parramatta NSW', 'Sam Kelly', 'sam.kelly@riversidehotel.example', true),
-  ('Central Sydney Club', 'NSW-CLUB-01', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='CLUB'), (SELECT id FROM key_account_groups WHERE name='Metro Clubs Alliance'), '5 George St, Sydney NSW', 'Priya Nair', 'priya.nair@centralclub.example', true),
-  ('Western Suburbs Club', 'NSW-CLUB-02', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='CLUB'), NULL, '21 High St, Penrith NSW', 'Leo Adams', 'leo.adams@westernclub.example', true),
-  ('Manly Bowls Club', 'NSW-BOWLS-01', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '3 Ocean Ave, Manly NSW', 'Grace Tan', 'grace.tan@manlybowls.example', true),
-  ('Newcastle Bowls Club', 'NSW-BOWLS-02', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '77 Coal St, Newcastle NSW', 'Ollie Hart', 'ollie.hart@newcastlebowls.example', true),
-  ('Sunshine Coast Hotel', 'QLD-HOTEL-01', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='HOTEL'), (SELECT id FROM key_account_groups WHERE name='Coastal Hotels Group'), '9 Beach Rd, Mooloolaba QLD', 'Mia Chen', 'mia.chen@sunshinehotel.example', true),
-  ('Brisbane City Hotel', 'QLD-HOTEL-02', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='HOTEL'), NULL, '150 Queen St, Brisbane QLD', 'Tom Baker', 'tom.baker@brisbanehotel.example', true),
-  ('Gold Coast Club', 'QLD-CLUB-01', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='CLUB'), NULL, '44 Surf Pde, Broadbeach QLD', 'Nina Patel', 'nina.patel@goldcoastclub.example', true),
+  ('The Landmark, Eastwood', 'NSW-HOTEL-01', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='HOTEL'), (SELECT id FROM key_account_groups WHERE name='Coastal Hotels Group'), '12 Harbour St, Sydney NSW', 'Nedine Mullan', 'dana.reed@anchorhotel.example', true),
+  ('Farmers Home Hotel, Wagga Wagga', 'NSW-HOTEL-02', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='HOTEL'), (SELECT id FROM key_account_groups WHERE name='Coastal Hotels Group'), '88 River Rd, Parramatta NSW', 'Andrew Dunstall', 'sam.kelly@riversidehotel.example', true),
+  ('Seven Seas Hotel, Carrington', 'NSW-CLUB-01', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='CLUB'), (SELECT id FROM key_account_groups WHERE name='Metro Clubs Alliance'), '5 George St, Sydney NSW', 'Bec Farrell', 'priya.nair@centralclub.example', true),
+  ('Gladstone Hotel, Dulwich Hill', 'NSW-CLUB-02', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='CLUB'), NULL, '21 High St, Penrith NSW', 'Nick Overall', 'leo.adams@westernclub.example', true),
+  ('Club Hotel, Leumeah', 'NSW-BOWLS-01', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '3 Ocean Ave, Manly NSW', 'Tegan Baker', 'grace.tan@manlybowls.example', true),
+  ('Robin Hood Hotel, Orange', 'NSW-BOWLS-02', (SELECT id FROM jurisdictions WHERE code='NSW'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '77 Coal St, Newcastle NSW', 'Tim Eather', 'ollie.hart@newcastlebowls.example', true),
+  ('Bli Bli Hotel', 'QLD-HOTEL-01', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='HOTEL'), (SELECT id FROM key_account_groups WHERE name='Coastal Hotels Group'), '9 Beach Rd, Mooloolaba QLD', 'Tony Kemp', 'mia.chen@sunshinehotel.example', true),
+  ('Shamrock Hotel - Mackay', 'QLD-HOTEL-02', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='HOTEL'), NULL, '150 Queen St, Brisbane QLD', 'Troy Tomkins', 'tom.baker@brisbanehotel.example', true),
+  ('Flagstone Tavern', 'QLD-CLUB-01', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='CLUB'), NULL, '44 Surf Pde, Broadbeach QLD', 'Cass Mawson', 'nina.patel@goldcoastclub.example', true),
   ('Cairns Leagues Club', 'QLD-CLUB-02', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='CLUB'), NULL, '10 Esplanade, Cairns QLD', 'Jack Reilly', 'jack.reilly@cairnsclub.example', true),
-  ('Toowoomba Bowls Club', 'QLD-BOWLS-01', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '6 Range St, Toowoomba QLD', 'Ella Wood', 'ella.wood@toowoombabowls.example', true),
-  ('Townsville Bowls Club', 'QLD-BOWLS-02', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '18 Strand Rd, Townsville QLD', 'Ken Ito', 'ken.ito@townsvillebowls.example', true),
-  ('St Kilda Hotel', 'VIC-HOTEL-01', (SELECT id FROM jurisdictions WHERE code='VIC'), (SELECT id FROM channels WHERE code='HOTEL'), NULL, '30 Fitzroy St, St Kilda VIC', 'Ruby Lin', 'ruby.lin@stkildahotel.example', true),
-  ('Geelong Hotel', 'VIC-HOTEL-02', (SELECT id FROM jurisdictions WHERE code='VIC'), (SELECT id FROM channels WHERE code='HOTEL'), NULL, '5 Moorabool St, Geelong VIC', 'Finn Doyle', 'finn.doyle@geelonghotel.example', true),
+  ('The Prince Consort Hotel', 'QLD-BOWLS-01', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '6 Range St, Toowoomba QLD', 'Nick Firth', 'ella.wood@toowoombabowls.example', true),
+  ('South Terrace Hotel', 'QLD-BOWLS-02', (SELECT id FROM jurisdictions WHERE code='QLD'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '18 Strand Rd, Townsville QLD', 'Rita Suleiman', 'ken.ito@townsvillebowls.example', true),
+  ('All Seasons International Motor Inn', 'VIC-HOTEL-01', (SELECT id FROM jurisdictions WHERE code='VIC'), (SELECT id FROM channels WHERE code='HOTEL'), NULL, '30 Fitzroy St, St Kilda VIC', 'Mark O''Brien', 'ruby.lin@stkildahotel.example', true),
+  ('The Sun Hotel', 'VIC-HOTEL-02', (SELECT id FROM jurisdictions WHERE code='VIC'), (SELECT id FROM channels WHERE code='HOTEL'), NULL, '5 Moorabool St, Geelong VIC', 'Darryn Haines', 'finn.doyle@geelonghotel.example', true),
   ('Fitzroy Club', 'VIC-CLUB-01', (SELECT id FROM jurisdictions WHERE code='VIC'), (SELECT id FROM channels WHERE code='CLUB'), (SELECT id FROM key_account_groups WHERE name='Metro Clubs Alliance'), '77 Brunswick St, Fitzroy VIC', 'Zoe Marsh', 'zoe.marsh@fitzroyclub.example', true),
   ('Ballarat Club', 'VIC-CLUB-02', (SELECT id FROM jurisdictions WHERE code='VIC'), (SELECT id FROM channels WHERE code='CLUB'), (SELECT id FROM key_account_groups WHERE name='Metro Clubs Alliance'), '2 Sturt St, Ballarat VIC', 'Cody Fisher', 'cody.fisher@ballaratclub.example', true),
   ('Bendigo Bowls Club', 'VIC-BOWLS-01', (SELECT id FROM jurisdictions WHERE code='VIC'), (SELECT id FROM channels WHERE code='BOWLS'), NULL, '14 Pall Mall, Bendigo VIC', 'Ivy Shaw', 'ivy.shaw@bendigobowls.example', true),
@@ -45,21 +45,26 @@ INSERT INTO venues (name, code, jurisdiction_id, channel_id, key_account_group_i
 -- Users. Shared demo password hash for all accounts: password123
 INSERT INTO users (name, email, password_hash, role, venue_id) VALUES
   ('Melissa Maloney', 'admin@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'ADMIN', NULL),
-  ('Jordan Blake (BDM - NSW/QLD)', 'bdm.north@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'BDM', NULL),
-  ('Casey Lane (BDM - VIC)', 'bdm.south@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'BDM', NULL),
+  ('Michael Osborn (BDM - NSW/QLD)', 'bdm.north@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'BDM', NULL),
+  ('Murray Dawson (BDM - VIC)', 'bdm.south@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'BDM', NULL),
   ('Morgan Riley (Approver)', 'approver.compliance@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'APPROVER', NULL),
   ('Taylor Quinn (Approver)', 'approver.finance@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'APPROVER', NULL),
-  ('Dana Reed (Venue: Anchor Hotel)', 'venue.anchor@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='NSW-HOTEL-01')),
-  ('Priya Nair (Venue: Central Sydney Club)', 'venue.centralsydney@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='NSW-CLUB-01')),
-  ('Mia Chen (Venue: Sunshine Coast Hotel)', 'venue.sunshinecoast@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='QLD-HOTEL-01')),
+  ('Nedine Mullan (Venue: The Landmark, Eastwood)', 'venue.anchor@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='NSW-HOTEL-01')),
+  ('Bec Farrell (Venue: Seven Seas Hotel, Carrington)', 'venue.centralsydney@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='NSW-CLUB-01')),
+  ('Tony Kemp (Venue: Bli Bli Hotel)', 'venue.sunshinecoast@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='QLD-HOTEL-01')),
   ('Zoe Marsh (Venue: Fitzroy Club)', 'venue.fitzroy@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='VIC-CLUB-01')),
   ('Ravi Fernando (Venue: Cairns Leagues Club)', 'venue.cairns@keno-demo.example', '$2a$10$7ftPWGT0T.4tQcSgVDqd6uE4i/jDTP/ubIYNxE3Ft1eAHusO9dXQa', 'VENUE', (SELECT id FROM venues WHERE code='QLD-CLUB-02'));
 
--- Assign BDMs to venues (NSW/QLD -> Jordan, VIC -> Casey)
+-- Assign BDMs to venues (NSW/QLD -> Michael Osborn, VIC -> Murray Dawson)
 UPDATE venues SET bdm_user_id = (SELECT id FROM users WHERE email='bdm.north@keno-demo.example')
 WHERE jurisdiction_id IN (SELECT id FROM jurisdictions WHERE code IN ('NSW','QLD'));
 UPDATE venues SET bdm_user_id = (SELECT id FROM users WHERE email='bdm.south@keno-demo.example')
 WHERE jurisdiction_id = (SELECT id FROM jurisdictions WHERE code='VIC');
+
+-- Hide these two demo logins from the login page's "Quick demo login" picker (accounts and
+-- their historical data stay fully intact, they just don't clutter the picker).
+UPDATE users SET hide_from_demo_picker = true
+WHERE email IN ('venue.anchor@keno-demo.example', 'venue.fitzroy@keno-demo.example');
 
 -- ============================================================
 -- 02. Promotions core: types, template fields, sample promotions -- UC1, UC4, UC9

@@ -28,6 +28,7 @@ export async function listDemoAccounts() {
   const { rows } = await query(
     `SELECT u.id, u.name, u.email, u.role, u.venue_id, v.name AS venue_name
      FROM users u LEFT JOIN venues v ON v.id = u.venue_id
+     WHERE u.hide_from_demo_picker = false
      ORDER BY u.role, u.name`
   );
   return rows;

@@ -3,7 +3,7 @@ import { Card, Typography, Row, Col } from 'antd';
 import { RightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { visibleNavGroups } from '../../layout/navConfig.js';
+import { visibleNavItems } from '../../layout/navConfig.js';
 import { ModuleIcon } from '../../layout/moduleIcons.jsx';
 
 function SectionTitle({ children }) {
@@ -18,7 +18,11 @@ function SectionTitle({ children }) {
 export default function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const moduleGroups = visibleNavGroups(user?.role).filter((g) => g.key !== 'dashboard');
+  const items = visibleNavItems(user?.role).filter((i) => i.uc >= 1);
+  const moduleGroups = [
+    { key: 'block-1', label: 'Block 1', items: items.filter((i) => i.uc >= 1 && i.uc <= 6) },
+    { key: 'block-2', label: 'Block 2', items: items.filter((i) => i.uc >= 7 && i.uc <= 12) },
+  ].filter((g) => g.items.length > 0);
 
   return (
     <div>

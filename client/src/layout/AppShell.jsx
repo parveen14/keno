@@ -6,6 +6,8 @@ import Sidebar from './Sidebar.jsx';
 import Topbar from './Topbar.jsx';
 
 const SIDER_NAVY = '#062B45';
+// Hidden for now per client feedback -- flip back to true to bring the button back.
+const SHOW_PUBLIC_REPORT_LINK = false;
 
 export default function AppShell() {
   return (
@@ -17,11 +19,13 @@ export default function AppShell() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
           <Sidebar />
         </div>
-        <div style={{ padding: 16, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-          <Button block ghost icon={<GlobalOutlined />} onClick={() => window.open('/public', '_blank')}>
-            Public report link
-          </Button>
-        </div>
+        {SHOW_PUBLIC_REPORT_LINK && (
+          <div style={{ padding: 16, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+            <Button block ghost icon={<GlobalOutlined />} onClick={() => window.open('/public', '_blank')}>
+              Public report link
+            </Button>
+          </div>
+        )}
       </Layout.Sider>
       <Layout>
         <Topbar />

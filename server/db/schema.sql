@@ -53,6 +53,9 @@ CREATE TABLE users (
   password_hash text NOT NULL,
   role text NOT NULL CHECK (role IN ('VENUE','BDM','APPROVER','ADMIN')),
   venue_id uuid REFERENCES venues(id),
+  -- Hides an account from the login page's "Quick demo login" picker without deleting it --
+  -- the account (and all its historical orders/returns/audit history) stays fully intact.
+  hide_from_demo_picker boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
