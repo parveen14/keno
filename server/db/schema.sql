@@ -304,7 +304,7 @@ CREATE TABLE prize_catalogue_items (
   name text NOT NULL,
   description text,
   category text NOT NULL,
-  tier text NOT NULL,
+  tier text,
   unit_price numeric(10,2) NOT NULL,
   -- Member price shown alongside RRP in the catalogue/cart -- always lower than unit_price (RRP).
   member_price numeric(10,2) NOT NULL DEFAULT 0,

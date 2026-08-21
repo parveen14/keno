@@ -70,7 +70,7 @@ export async function createCatalogueItem(data, userId) {
   const { rows } = await query(
     `INSERT INTO prize_catalogue_items (sku, name, description, category, tier, unit_price, image_url, member_price, freight_cost)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-    [sku, name, description ?? null, category, tier, unitPrice, imageUrl ?? null,
+    [sku, name, description ?? null, category, tier ?? null, unitPrice, imageUrl ?? null,
       memberPrice ?? Math.round(unitPrice * 0.8 * 100) / 100, freightCost ?? Math.round(unitPrice * 0.05 * 100) / 100]
   );
   await writeAuditLog({ tableName: 'prize_catalogue_items', recordId: rows[0].id, action: 'INSERT', changedBy: userId, newData: rows[0] });

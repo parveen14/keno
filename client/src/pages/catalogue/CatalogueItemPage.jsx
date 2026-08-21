@@ -23,6 +23,13 @@ export default function CatalogueItemPage() {
   });
 
   const item = items?.find((i) => String(i.id) === String(id));
+  const availableQty = Number(item?.available_qty ?? 0);
+  const isOut = !item || availableQty <= 0;
+
+  React.useEffect(() => {
+    if (item) setQuantity(isOut ? 0 : 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item, isOut]);
 
   if (isLoading) {
     return (
@@ -40,11 +47,9 @@ export default function CatalogueItemPage() {
     );
   }
 
-  const availableQty = Number(item.available_qty);
-  const isOut = availableQty <= 0;
   const isLow = !isOut && availableQty < LOW_STOCK_THRESHOLD;
   const needsAttention = isOut || isLow;
-  const maxQty = isOut ? undefined : availableQty;
+  const maxQty = isOut ? 0 : availableQty;
   const etaText = item.restock_eta_date ? new Date(item.restock_eta_date).toLocaleDateString() : null;
 
   const handleAddToCart = (qty) => {
@@ -94,10 +99,16 @@ export default function CatalogueItemPage() {
 
           <Space align="center" style={{ marginBottom: 16 }}>
             <Typography.Text>Quantity</Typography.Text>
-            <InputNumber min={1} max={maxQty} value={quantity} onChange={(v) => setQuantity(v || 1)} />
+            <InputNumber
+              min={isOut ? 0 : 1}
+              max={maxQty}
+              value={quantity}
+              disabled={isOut}
+              onChange={(v) => setQuantity(v || (isOut ? 0 : 1))}
+            />
           </Space>
 
-          {!needsAttention && (
+          {!isOut && (
             <div>
               <Button type="primary" size="large" icon={<ShoppingCartOutlined />} onClick={() => handleAddToCart()}>
                 Add to cart
@@ -118,18 +129,6 @@ export default function CatalogueItemPage() {
                       ? (etaText ? `This item is currently out of stock. Estimated restock: ${etaText}.` : 'This item is currently out of stock. No restock ETA is available yet.')
                       : `Only ${availableQty} left in stock right now.`}
                   </Typography.Text>
-
-                  {isLow && (
-                    <div>
-                      <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>Place the order anyway</Typography.Text>
-                      <Button
-                        icon={<ShoppingCartOutlined />}
-                        onClick={() => handleAddToCart()}
-                      >
-                        Add to cart anyway ({quantity} · limited stock)
-                      </Button>
-                    </div>
-                  )}
 
                   {item.substitutes?.length > 0 && (
                     <div>

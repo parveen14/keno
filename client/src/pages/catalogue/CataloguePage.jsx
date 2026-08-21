@@ -46,7 +46,6 @@ export default function CataloguePage() {
               const availableQty = Number(r.available_qty);
               const isOut = availableQty <= 0;
               const isLow = !isOut && availableQty < LOW_STOCK_THRESHOLD;
-              const needsAttention = isOut || isLow;
 
               return (
                 <Card
@@ -85,7 +84,7 @@ export default function CataloguePage() {
                   {isLow && <Tag color="gold">Low stock - only {availableQty} remaining</Tag>}
                   {!isOut && !isLow && <Tag color="green">In stock</Tag>}
                   <div style={{ marginTop: 8, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    {needsAttention ? (
+                    {isOut ? (
                       <Button size="small" onClick={() => navigate(`/catalogue/${r.id}`)}>View options</Button>
                     ) : (
                       <Button size="small" type="primary" icon={<ShoppingCartOutlined />} onClick={() => handleAddToCart(r)}>Add to cart</Button>

@@ -28,6 +28,46 @@ router.get('/:id/promotions', asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
+// Each venue belongs to at most one key account group (venues.key_account_group_id is a plain
+// FK, not a join table). This is a full sync from the add/edit group form's multi-select: any
+// venue not in venueIds is unassigned, any venue in venueIds is (re)assigned to this group.
+router.put('/:id/venues', asyncHandler(async (req, res) => {
+  const group = (await query('SELECT * FROM key_account_groups WHERE id = $1', [req.params.id])).rows[0];
+  if (!group) return res.status(404).json({ error: 'Key account group not found' });
+  const venueIds = req.body.venueIds || [];
+
+  const removed = (await query(
+    'UPDATE venues SET key_account_group_id = NULL WHERE key_account_group_id = $1 AND NOT (id = ANY($2)) RETURNING id',
+    [req.params.id, venueIds]
+  )).rows;
+  const added = (await query(
+    'UPDATE venues SET key_account_group_id = $1 WHERE id = ANY($2) AND key_account_group_id IS DISTINCT FROM $1 RETURNING id',
+    [req.params.id, venueIds]
+  )).rows;
+
+  if (removed.length || added.length) {
+    await writeAuditLog({
+      tableName: 'venues', recordId: req.params.id, action: 'UPDATE', changedBy: req.user.userId,
+      oldData: { removedVenueIds: removed.map((r) => r.id) }, newData: { addedVenueIds: added.map((r) => r.id) },
+    });
+  }
+
+  const { rows } = await query('SELECT * FROM venues WHERE key_account_group_id = $1 ORDER BY name', [req.params.id]);
+  res.json(rows);
+}));
+
+router.delete('/:id/venues/:venueId', asyncHandler(async (req, res) => {
+  const venue = (await query('SELECT * FROM venues WHERE id = $1 AND key_account_group_id = $2', [req.params.venueId, req.params.id])).rows[0];
+  if (!venue) return res.status(404).json({ error: 'Venue is not a member of this key account group' });
+
+  await query('UPDATE venues SET key_account_group_id = NULL WHERE id = $1', [req.params.venueId]);
+  await writeAuditLog({
+    tableName: 'venues', recordId: req.params.venueId, action: 'UPDATE', changedBy: req.user.userId,
+    oldData: { key_account_group_id: req.params.id }, newData: { key_account_group_id: null },
+  });
+  res.status(204).end();
+}));
+
 router.post('/', asyncHandler(async (req, res) => {
   const { name, description, discountRate } = req.body;
   const { rows } = await query(

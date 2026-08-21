@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Row, Col, Card, List, Typography, Table, Button, Space, Popconfirm, message, Empty } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, TeamOutlined } from '@ant-design/icons';
@@ -39,7 +39,8 @@ function SummaryStrip({ items }) {
 export default function KeyAccountsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectedId, setSelectedId] = useState(null);
+  const [searchParams] = useSearchParams();
+  const [selectedId, setSelectedId] = useState(searchParams.get('selected') || null);
 
   const { data: groups } = useQuery({ queryKey: ['key-account-groups'], queryFn: () => api.get('/key-account-groups').then((r) => r.data) });
   const { data: venues } = useQuery({
@@ -66,9 +67,27 @@ export default function KeyAccountsPage() {
     onError: (e) => message.error(e.response?.data?.error || 'Failed to delete'),
   });
 
+  const removeVenueMutation = useMutation({
+    mutationFn: (venueId) => api.delete(`/key-account-groups/${selectedId}/venues/${venueId}`),
+    onSuccess: () => {
+      message.success('Venue removed from group');
+      queryClient.invalidateQueries({ queryKey: ['kag-venues', selectedId] });
+      queryClient.invalidateQueries({ queryKey: ['venues'] });
+    },
+    onError: (e) => message.error(e.response?.data?.error || 'Failed to remove venue'),
+  });
+
   const venueColumns = [
     { title: 'Venue', dataIndex: 'name', render: (v) => <strong>{v}</strong> },
     { title: 'Code', dataIndex: 'code' },
+    {
+      title: '',
+      render: (_, r) => (
+        <Popconfirm title="Remove this venue from the group?" onConfirm={() => removeVenueMutation.mutate(r.id)}>
+          <Button size="small" danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      ),
+    },
   ];
   const promotionColumns = [
     { title: 'Promotion', dataIndex: 'name', render: (v) => <strong>{v}</strong> },

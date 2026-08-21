@@ -23,7 +23,7 @@ export default function CatalogueItemFormPage() {
   React.useEffect(() => {
     if (isEdit && existing) {
       form.setFieldsValue({
-        name: existing.name, description: existing.description, category: existing.category, tier: existing.tier,
+        name: existing.name, description: existing.description, category: existing.category,
         unitPrice: Number(existing.unit_price), memberPrice: Number(existing.member_price), freightCost: Number(existing.freight_cost),
         isActive: existing.is_active, imageUrl: existing.image_url,
       });
@@ -83,16 +83,7 @@ export default function CatalogueItemFormPage() {
             </Col>
           </Row>
           <Form.Item name="description" label="Description"><Input.TextArea rows={2} /></Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="category" label="Category" rules={[{ required: true }]}><Input /></Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="tier" label="Tier" rules={[{ required: true }]}>
-                <Select options={['Bronze', 'Silver', 'Gold', 'Platinum'].map((t) => ({ value: t, label: t }))} />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item name="category" label="Category" rules={[{ required: true }]} style={{ maxWidth: 360 }}><Input /></Form.Item>
         </FormSection>
 
         <FormSection title="Pricing & stock">

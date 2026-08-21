@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Form, Input, InputNumber, Button, Space, message, Row, Col } from 'antd';
+import { Card, Form, Input, InputNumber, Select, Button, Space, message, Row, Col } from 'antd';
 import { ArrowLeftOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 
@@ -28,6 +28,13 @@ export default function KeyAccountGroupFormPage() {
   const { data: groups } = useQuery({ queryKey: ['key-account-groups'], queryFn: () => api.get('/key-account-groups').then((r) => r.data) });
   const existing = isEdit ? groups?.find((g) => g.id === id) : null;
 
+  const { data: allVenues } = useQuery({ queryKey: ['venues'], queryFn: () => api.get('/venues').then((r) => r.data) });
+  const { data: memberVenues } = useQuery({
+    queryKey: ['kag-venues', id],
+    queryFn: () => api.get(`/key-account-groups/${id}/venues`).then((r) => r.data),
+    enabled: isEdit,
+  });
+
   React.useEffect(() => {
     if (isEdit && existing) {
       form.setFieldsValue({
@@ -39,17 +46,28 @@ export default function KeyAccountGroupFormPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, existing]);
 
+  React.useEffect(() => {
+    if (isEdit && memberVenues) {
+      form.setFieldsValue({ venueIds: memberVenues.map((v) => v.id) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, memberVenues]);
+
   const saveMutation = useMutation({
-    mutationFn: (values) => {
-      const payload = { ...values, discountRate: (values.discountRate || 0) / 100 };
-      if (isEdit) {
-        return api.put(`/key-account-groups/${id}`, payload);
-      }
-      return api.post('/key-account-groups', payload);
+    mutationFn: async (values) => {
+      const { venueIds, ...groupValues } = values;
+      const payload = { ...groupValues, discountRate: (groupValues.discountRate || 0) / 100 };
+      const group = isEdit
+        ? (await api.put(`/key-account-groups/${id}`, payload)).data
+        : (await api.post('/key-account-groups', payload)).data;
+      await api.put(`/key-account-groups/${group.id}/venues`, { venueIds: venueIds || [] });
+      return group;
     },
     onSuccess: () => {
       message.success(isEdit ? 'Key account group updated' : 'Key account group created');
       queryClient.invalidateQueries({ queryKey: ['key-account-groups'] });
+      queryClient.invalidateQueries({ queryKey: ['kag-venues'] });
+      queryClient.invalidateQueries({ queryKey: ['venues'] });
       navigate('/key-accounts');
     },
     onError: (e) => message.error(e.response?.data?.error || 'Failed to save key account group'),
@@ -76,6 +94,24 @@ export default function KeyAccountGroupFormPage() {
           </Col>
         </Row>
         <Form.Item name="description" label="Description"><Input.TextArea rows={2} placeholder="What ties these venues together" /></Form.Item>
+
+        <Form.Item
+          name="venueIds"
+          label="Venues"
+          tooltip="A venue can only belong to one key account group at a time -- selecting a venue already in another group will move it here."
+        >
+          <Select
+            mode="multiple"
+            showSearch
+            allowClear
+            optionFilterProp="label"
+            placeholder="Select venues for this group"
+            options={allVenues?.map((v) => ({
+              value: v.id,
+              label: v.key_account_group_id && v.key_account_group_id !== id ? `${v.name} (currently in ${v.key_account_group_name})` : v.name,
+            }))}
+          />
+        </Form.Item>
 
         {discountRate > 0 && (
           <div style={{
