@@ -1,5 +1,28 @@
+import PDFDocument from 'pdfkit';
 import { query } from '../../lib/db.js';
 import { writeAuditLog } from '../../lib/auditLog.js';
+import dayjs from '../../lib/dayjs.js';
+
+function renderTableInto(doc, columns, rows) {
+  const colWidth = (doc.page.width - 80) / columns.length;
+  const startX = doc.x;
+  let y = doc.y;
+  const drawRow = (cells, isHeader) => {
+    doc.fontSize(9).fillColor('#333333').font(isHeader ? 'Helvetica-Bold' : 'Helvetica');
+    cells.forEach((cell, i) => doc.text(String(cell ?? '—'), startX + i * colWidth, y, { width: colWidth - 8 }));
+    y += 20;
+    if (y > doc.page.height - 60) { doc.addPage(); y = doc.y; }
+  };
+  drawRow(columns.map((c) => c.title), true);
+  doc.moveTo(startX, y - 4).lineTo(doc.page.width - 40, y - 4).strokeColor('#dddddd').stroke();
+  if (!rows.length) {
+    doc.fontSize(9).fillColor('#999999').text('No line items.', startX, y);
+    y += 20;
+  } else {
+    rows.forEach((r) => drawRow(columns.map((c) => (c.render ? c.render(r) : r[c.key]))));
+  }
+  doc.x = startX; doc.y = y;
+}
 
 export async function listInvoices({ venueId, periodMonth, periodYear } = {}) {
   const clauses = [];
@@ -106,6 +129,41 @@ export async function exportInvoiceCsv(id) {
   const rows = invoice.lineItems.map((li) => `${li.category},"${li.description.replace(/"/g, '')}",${li.amount}`).join('\n');
   const footer = `\nSubtotal,,${invoice.subtotal}\nDiscount,,-${invoice.discount_total}\nFreight,,${invoice.freight_total}\nTotal,,${invoice.total}\n`;
   return header + rows + footer;
+}
+
+export async function exportInvoicePdf(id) {
+  const invoice = await getInvoice(id);
+  if (!invoice) throw Object.assign(new Error('Invoice not found'), { status: 404 });
+  await query(`UPDATE invoices SET status = 'EXPORTED' WHERE id = $1 AND status != 'FINALIZED'`, [id]);
+
+  const cols = [
+    { title: 'Category', key: 'category' },
+    { title: 'Description', key: 'description' },
+    { title: 'Amount', render: (r) => `$${Number(r.amount).toFixed(2)}` },
+  ];
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const chunks = [];
+  doc.on('data', (c) => chunks.push(c));
+  const done = new Promise((resolve) => doc.on('end', () => resolve(Buffer.concat(chunks))));
+
+  const period = dayjs(`${invoice.period_year}-${invoice.period_month}-01`).format('MMMM YYYY');
+  doc.fontSize(18).fillColor('#0060ac').text('Invoice');
+  doc.fontSize(10).fillColor('#666666').text(`${invoice.venue_name}${invoice.key_account_group_name ? ` · ${invoice.key_account_group_name}` : ''}`);
+  doc.text(`Period: ${period}   ·   Status: ${invoice.status}   ·   Generated: ${new Date().toISOString()}`);
+  doc.moveDown();
+
+  renderTableInto(doc, cols, invoice.lineItems);
+
+  doc.moveDown();
+  doc.fontSize(10).fillColor('#333333').font('Helvetica');
+  doc.text(`Subtotal: $${Number(invoice.subtotal).toFixed(2)}`);
+  doc.text(`Discount: -$${Number(invoice.discount_total).toFixed(2)}`);
+  doc.text(`Freight: $${Number(invoice.freight_total).toFixed(2)}`);
+  doc.moveDown(0.3);
+  doc.fontSize(13).font('Helvetica-Bold').fillColor('#0060ac').text(`Total: $${Number(invoice.total).toFixed(2)}`);
+
+  doc.end();
+  return done;
 }
 
 export async function listLedgerItems({ venueId } = {}) {

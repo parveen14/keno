@@ -306,8 +306,10 @@ CREATE TABLE prize_catalogue_items (
   category text NOT NULL,
   tier text NOT NULL,
   unit_price numeric(10,2) NOT NULL,
-  -- Loyalty-points price shown alongside RRP in the catalogue/cart (10 points per dollar by default).
-  points_value int NOT NULL DEFAULT 0,
+  -- Member price shown alongside RRP in the catalogue/cart -- always lower than unit_price (RRP).
+  member_price numeric(10,2) NOT NULL DEFAULT 0,
+  -- Per-product freight cost, shown under the RRP in the catalogue.
+  freight_cost numeric(10,2) NOT NULL DEFAULT 0,
   image_url text,
   is_active boolean NOT NULL DEFAULT true
 );
@@ -377,7 +379,7 @@ CREATE TABLE order_items (
   prize_catalogue_item_id uuid NOT NULL REFERENCES prize_catalogue_items(id),
   quantity int NOT NULL,
   unit_price numeric(10,2) NOT NULL,
-  points_value int NOT NULL DEFAULT 0,
+  member_price numeric(10,2) NOT NULL DEFAULT 0,
   warehouse_id uuid REFERENCES warehouses(id)
 );
 

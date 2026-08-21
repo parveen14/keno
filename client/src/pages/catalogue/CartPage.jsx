@@ -10,7 +10,7 @@ import { useAuth } from '../../auth/AuthContext.jsx';
 export default function CartPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { items, updateQuantity, removeItem, clearCart, totalPoints, totalPrice } = useCart();
+  const { items, updateQuantity, removeItem, clearCart, totalMemberPrice, totalPrice } = useCart();
 
   const [venueId, setVenueId] = useState(user?.venueId || undefined);
   const [poReference, setPoReference] = useState('');
@@ -74,7 +74,7 @@ export default function CartPage() {
                 <Typography.Text strong style={{ display: 'block' }}>{item.name}</Typography.Text>
                 <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 2 }}>{item.sku}</Typography.Text>
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  {Number(item.pointsValue).toLocaleString()} pts &middot; ${Number(item.unitPrice).toFixed(2)} RRP
+                  ${Number(item.memberPrice).toFixed(2)} &middot; ${Number(item.unitPrice).toFixed(2)} RRP
                 </Typography.Text>
               </div>
 
@@ -88,7 +88,7 @@ export default function CartPage() {
               />
 
               <Typography.Text strong style={{ width: 110, textAlign: 'right' }}>
-                {(item.quantity * item.pointsValue).toLocaleString()} pts
+                ${(item.quantity * item.memberPrice).toFixed(2)}
               </Typography.Text>
 
               <Button danger type="text" icon={<DeleteOutlined />} onClick={() => removeItem(item.itemId)} />
@@ -126,7 +126,7 @@ export default function CartPage() {
           <Space direction="vertical" style={{ width: '100%' }} size={8}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography.Text>Subtotal</Typography.Text>
-              <Typography.Text strong>{totalPoints.toLocaleString()} pts</Typography.Text>
+              <Typography.Text strong>${Number(totalMemberPrice).toFixed(2)}</Typography.Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography.Text>Delivery</Typography.Text>
@@ -135,10 +135,10 @@ export default function CartPage() {
             <Divider style={{ margin: '8px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography.Text strong style={{ fontSize: 16 }}>Total</Typography.Text>
-              <Typography.Text strong style={{ fontSize: 16 }}>{totalPoints.toLocaleString()} pts</Typography.Text>
+              <Typography.Text strong style={{ fontSize: 16 }}>${Number(totalMemberPrice).toFixed(2)}</Typography.Text>
             </div>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              (${Number(totalPrice).toFixed(2)} RRP equivalent, excl. delivery)
+              (RRP ${Number(totalPrice).toFixed(2)} &middot; you save ${Number(totalPrice - totalMemberPrice).toFixed(2)}, excl. delivery)
             </Typography.Text>
           </Space>
 

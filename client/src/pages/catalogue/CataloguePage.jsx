@@ -7,7 +7,6 @@ import api from '../../lib/api.js';
 import { useCart } from '../../cart/CartContext.jsx';
 
 const LOW_STOCK_THRESHOLD = 5;
-const TIER_COLOR = { Bronze: '#a1662f', Silver: '#8c8c8c', Gold: '#d4af37', Platinum: '#5b8def' };
 
 export default function CataloguePage() {
   const navigate = useNavigate();
@@ -76,11 +75,11 @@ export default function CataloguePage() {
                   <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>{r.sku}</Typography.Text>
                   <Space size={4} wrap style={{ marginBottom: 6 }}>
                     <Tag>{r.category}</Tag>
-                    <Tag color={TIER_COLOR[r.tier]}>{r.tier}</Tag>
                   </Space>
                   <div style={{ marginBottom: 6 }}>
-                    <Typography.Text strong style={{ display: 'block', fontSize: 16 }}>{Number(r.points_value).toLocaleString()} pts</Typography.Text>
-                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>RRP ${Number(r.unit_price).toFixed(2)}</Typography.Text>
+                    <Typography.Text strong style={{ display: 'block', fontSize: 16 }}>${Number(r.member_price).toFixed(2)}</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>RRP ${Number(r.unit_price).toFixed(2)}</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>Freight ${Number(r.freight_cost).toFixed(2)}</Typography.Text>
                   </div>
                   {isOut && <Tag color="red">Out of stock{r.restock_eta_date ? ` · ETA ${new Date(r.restock_eta_date).toLocaleDateString()}` : ''}</Tag>}
                   {isLow && <Tag color="gold">Low stock - only {availableQty} remaining</Tag>}

@@ -14,6 +14,10 @@ router.get('/:id', asyncHandler(async (req, res) => {
   res.json(group);
 }));
 router.get('/:id/report', asyncHandler(async (req, res) => res.json(await service.groupReport(req.params.id))));
+router.get('/:id/report/export.csv', asyncHandler(async (req, res) => {
+  const csv = await service.exportGroupReportCsv(req.params.id);
+  res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="venue-group-report.csv"').send(csv);
+}));
 router.put('/:id', asyncHandler(async (req, res) => res.json(await service.updateVenueGroup(req.params.id, req.body, req.user.userId))));
 router.delete('/:id', asyncHandler(async (req, res) => { await service.deleteVenueGroup(req.params.id, req.user.userId); res.status(204).end(); }));
 router.post('/:id/members', asyncHandler(async (req, res) => res.status(201).json(await service.addMember(req.params.id, req.body.venueId, req.user.userId))));

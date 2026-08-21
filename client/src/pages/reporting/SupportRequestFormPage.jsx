@@ -22,6 +22,7 @@ export default function SupportRequestFormPage() {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const [searchParams] = useSearchParams();
+  const issueType = Form.useWatch('issueType', form);
 
   // Linked-context query params, only meaningful on create (arriving from a venue/exception/etc link).
   const linkVenueId = !isEdit ? searchParams.get('venueId') : null;
@@ -33,6 +34,8 @@ export default function SupportRequestFormPage() {
   const hasLinkedContext = !!(linkVenueId || linkPromotionId || linkOrderId || linkExceptionId);
 
   const { data: venues } = useQuery({ queryKey: ['venues'], queryFn: () => api.get('/venues').then((r) => r.data) });
+  const { data: promotions } = useQuery({ queryKey: ['promotions'], queryFn: () => api.get('/promotions').then((r) => r.data) });
+  const { data: orders } = useQuery({ queryKey: ['orders'], queryFn: () => api.get('/orders').then((r) => r.data) });
 
   // Only needed to resolve a human-readable label for the linked exception, so skip it unless we have one.
   const { data: exceptions } = useQuery({
@@ -168,6 +171,16 @@ export default function SupportRequestFormPage() {
               </Form.Item>
             </Col>
           </Row>
+          {!isEdit && !hasLinkedContext && issueType === 'PROMOTION' && (
+            <Form.Item name="promotionId" label="Promotion">
+              <Select allowClear showSearch optionFilterProp="label" placeholder="Select a promotion" options={promotions?.map((p) => ({ value: p.id, label: p.name }))} />
+            </Form.Item>
+          )}
+          {!isEdit && !hasLinkedContext && issueType === 'ORDER' && (
+            <Form.Item name="orderId" label="Order">
+              <Select allowClear showSearch optionFilterProp="label" placeholder="Select an order" options={orders?.map((o) => ({ value: o.id, label: o.po_reference || `Order #${o.id.slice(0, 8)}` }))} />
+            </Form.Item>
+          )}
           <Form.Item name="description" label="Description"><Input.TextArea rows={3} /></Form.Item>
         </FormSection>
       </Form>

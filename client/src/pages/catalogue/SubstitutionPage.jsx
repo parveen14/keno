@@ -6,8 +6,6 @@ import { ArrowLeftOutlined, SwapRightOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import { useCart } from '../../cart/CartContext.jsx';
 
-const TIER_COLOR = { Bronze: '#a1662f', Silver: '#8c8c8c', Gold: '#d4af37', Platinum: '#5b8def' };
-
 function ProductImage({ src, alt }) {
   return (
     <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
@@ -89,18 +87,17 @@ export default function SubstitutionPage() {
   const existingCartLine = items.find((i) => i.itemId === (original.id ?? Number(id)));
   const quantity = existingCartLine ? existingCartLine.quantity : 1;
 
-  const originalPoints = Number(original.points_value);
-  const subPoints = Number(selected.pointsValue);
-  const pointsDelta = subPoints - originalPoints;
+  const originalMemberPrice = Number(original.member_price);
+  const subMemberPrice = Number(selected.memberPrice);
+  const priceDelta = subMemberPrice - originalMemberPrice;
 
   let summaryMessage;
-  if (pointsDelta < 0) {
-    const bonus = Math.abs(pointsDelta);
-    summaryMessage = `You'll receive the ${selected.name} instead — it's ${bonus} points cheaper, so you'll get ${bonus} bonus points.`;
-  } else if (pointsDelta > 0) {
-    summaryMessage = `You'll receive the ${selected.name} instead — this option costs ${pointsDelta} more points than ${original.name}.`;
+  if (priceDelta < 0) {
+    summaryMessage = `You'll receive the ${selected.name} instead — it's $${Math.abs(priceDelta).toFixed(2)} cheaper than ${original.name}.`;
+  } else if (priceDelta > 0) {
+    summaryMessage = `You'll receive the ${selected.name} instead — this option costs $${priceDelta.toFixed(2)} more than ${original.name}.`;
   } else {
-    summaryMessage = `You'll receive the ${selected.name} instead — same points value, so there's no difference in cost.`;
+    summaryMessage = `You'll receive the ${selected.name} instead — same member price, so there's no difference in cost.`;
   }
 
   const handleUseSubstitution = () => {
@@ -139,10 +136,10 @@ export default function SubstitutionPage() {
             <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>{original.name}</Typography.Text>
             <Space size={4} wrap style={{ marginBottom: 8 }}>
               <Tag>{original.category}</Tag>
-              <Tag color={TIER_COLOR[original.tier]}>{original.tier}</Tag>
             </Space>
-            <Typography.Text style={{ display: 'block' }}>{originalPoints} pts</Typography.Text>
-            <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>RRP ${Number(original.unit_price).toFixed(2)}</Typography.Text>
+            <Typography.Text style={{ display: 'block' }}>${originalMemberPrice.toFixed(2)}</Typography.Text>
+            <Typography.Text type="secondary" style={{ display: 'block' }}>RRP ${Number(original.unit_price).toFixed(2)}</Typography.Text>
+            <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>Freight ${Number(original.freight_cost).toFixed(2)}</Typography.Text>
             <Tag color="red">Low stock ({Number(original.available_qty) || 0} available)</Tag>
           </Card>
         </Col>
@@ -156,8 +153,9 @@ export default function SubstitutionPage() {
             <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>SELECTED SUBSTITUTE</Typography.Text>
             <ProductImage src={selected.imageUrl} alt={selected.name} />
             <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>{selected.name}</Typography.Text>
-            <Typography.Text style={{ display: 'block', marginTop: 8 }}>{Number(selected.pointsValue)} pts</Typography.Text>
-            <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>RRP ${Number(selected.unitPrice).toFixed(2)}</Typography.Text>
+            <Typography.Text style={{ display: 'block', marginTop: 8 }}>${subMemberPrice.toFixed(2)}</Typography.Text>
+            <Typography.Text type="secondary" style={{ display: 'block' }}>RRP ${Number(selected.unitPrice).toFixed(2)}</Typography.Text>
+            <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>Freight ${Number(selected.freightCost).toFixed(2)}</Typography.Text>
             <Tag color="green">In stock ({Number(selected.availableQty) || 0} available)</Tag>
           </Card>
         </Col>
@@ -165,7 +163,7 @@ export default function SubstitutionPage() {
 
       <Alert
         style={{ marginTop: 20, marginBottom: 20 }}
-        type={pointsDelta > 0 ? 'warning' : 'info'}
+        type={priceDelta > 0 ? 'warning' : 'info'}
         showIcon
         message={summaryMessage}
       />

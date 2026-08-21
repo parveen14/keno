@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Row, Col, Card, Button, message, Descriptions, Table, Popconfirm, Space } from 'antd';
-import { PlusOutlined, DownloadOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DownloadOutlined, FilePdfOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
 import DataTable from '../../components/DataTable.jsx';
@@ -84,6 +84,9 @@ export default function InvoicesPage() {
               {detail.status === 'DRAFT' && <Button onClick={() => finalizeMutation.mutate(detail.id)} loading={finalizeMutation.isPending}>Finalize</Button>}
               <Button icon={<DownloadOutlined />} onClick={() => window.open(`/api/invoices/${detail.id}/export?token=${localStorage.getItem('keno_token')}`, '_blank')}>
                 Export CSV
+              </Button>
+              <Button icon={<FilePdfOutlined />} onClick={() => window.open(`/api/invoices/${detail.id}/export.pdf?token=${localStorage.getItem('keno_token')}`, '_blank')}>
+                Export PDF
               </Button>
               {detail.status === 'DRAFT' && (
                 <Popconfirm title="Delete this draft invoice?" onConfirm={() => deleteMutation.mutate(detail.id)}>

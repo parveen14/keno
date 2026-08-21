@@ -20,5 +20,9 @@ router.get('/:id/export', asyncHandler(async (req, res) => {
   const csv = await service.exportInvoiceCsv(req.params.id);
   res.set('Content-Type', 'text/csv').set('Content-Disposition', `attachment; filename="invoice-${req.params.id.slice(0, 8)}.csv"`).send(csv);
 }));
+router.get('/:id/export.pdf', asyncHandler(async (req, res) => {
+  const pdf = await service.exportInvoicePdf(req.params.id);
+  res.set('Content-Type', 'application/pdf').set('Content-Disposition', `attachment; filename="invoice-${req.params.id.slice(0, 8)}.pdf"`).send(pdf);
+}));
 
 export default router;

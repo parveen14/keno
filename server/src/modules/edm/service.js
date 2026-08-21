@@ -107,6 +107,18 @@ export async function updateCampaign(id, data, userId) {
   return getCampaign(id);
 }
 
+export async function scheduleCampaign(id, scheduledSendAt, userId) {
+  const existing = (await query('SELECT * FROM edm_campaigns WHERE id = $1', [id])).rows[0];
+  if (!existing) throw Object.assign(new Error('Campaign not found'), { status: 404 });
+  if (existing.status === 'SENT') throw Object.assign(new Error('This campaign has already been sent'), { status: 400 });
+  const { rows } = await query(
+    `UPDATE edm_campaigns SET scheduled_send_at = $2, status = 'QUEUED' WHERE id = $1 RETURNING *`,
+    [id, scheduledSendAt]
+  );
+  await writeAuditLog({ tableName: 'edm_campaigns', recordId: id, action: 'UPDATE', changedBy: userId, oldData: existing, newData: rows[0] });
+  return getCampaign(id);
+}
+
 export async function deleteCampaign(id, userId) {
   const existing = (await query('SELECT * FROM edm_campaigns WHERE id = $1', [id])).rows[0];
   if (!existing) throw Object.assign(new Error('Campaign not found'), { status: 404 });

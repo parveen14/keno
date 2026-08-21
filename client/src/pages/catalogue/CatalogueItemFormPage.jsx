@@ -24,7 +24,8 @@ export default function CatalogueItemFormPage() {
     if (isEdit && existing) {
       form.setFieldsValue({
         name: existing.name, description: existing.description, category: existing.category, tier: existing.tier,
-        unitPrice: Number(existing.unit_price), pointsValue: existing.points_value, isActive: existing.is_active, imageUrl: existing.image_url,
+        unitPrice: Number(existing.unit_price), memberPrice: Number(existing.member_price), freightCost: Number(existing.freight_cost),
+        isActive: existing.is_active, imageUrl: existing.image_url,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,13 +98,32 @@ export default function CatalogueItemFormPage() {
         <FormSection title="Pricing & stock">
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="unitPrice" label="Unit price" rules={[{ required: true }]}>
+              <Form.Item name="unitPrice" label="Unit price (RRP)" rules={[{ required: true }]}>
                 <InputNumber min={0} style={{ width: '100%' }} prefix="$" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="pointsValue" label="Points price" tooltip="Shown in the catalogue/cart as the redeemable points cost. Defaults to 10x the unit price if left blank.">
-                <InputNumber min={0} style={{ width: '100%' }} placeholder="Auto (10x unit price)" />
+              <Form.Item
+                name="memberPrice"
+                label="Member price"
+                tooltip="Shown in the catalogue/cart alongside the RRP. Must be lower than the unit price. Defaults to 80% of the unit price if left blank."
+                dependencies={['unitPrice']}
+                rules={[{
+                  validator: (_, value) => {
+                    const unitPrice = form.getFieldValue('unitPrice');
+                    if (value == null || unitPrice == null || value < unitPrice) return Promise.resolve();
+                    return Promise.reject(new Error('Member price must be lower than the unit price (RRP)'));
+                  },
+                }]}
+              >
+                <InputNumber min={0} style={{ width: '100%' }} prefix="$" placeholder="Auto (80% of unit price)" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="freightCost" label="Freight cost" tooltip="Shown under the RRP in the catalogue. Defaults to 5% of the unit price if left blank.">
+                <InputNumber min={0} style={{ width: '100%' }} prefix="$" placeholder="Auto (5% of unit price)" />
               </Form.Item>
             </Col>
           </Row>

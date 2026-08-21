@@ -3,7 +3,7 @@ import React from 'react';
 const CartContext = React.createContext(null);
 const STORAGE_KEY = 'keno_cart';
 
-// Cart items are shaped as: { itemId, name, sku, imageUrl, unitPrice, pointsValue, quantity }
+// Cart items are shaped as: { itemId, name, sku, imageUrl, unitPrice, memberPrice, quantity }
 // Persisted to localStorage only (no backend cart table) -- "Place order" sends the whole
 // array to the existing multi-item POST /orders endpoint in one call, then the cart is cleared.
 export function CartProvider({ children }) {
@@ -25,7 +25,7 @@ export function CartProvider({ children }) {
     sku: item.sku,
     imageUrl: item.imageUrl ?? item.image_url ?? null,
     unitPrice: Number(item.unitPrice ?? item.unit_price),
-    pointsValue: Number(item.pointsValue ?? item.points_value),
+    memberPrice: Number(item.memberPrice ?? item.member_price),
     quantity,
   });
 
@@ -55,10 +55,10 @@ export function CartProvider({ children }) {
   const clearCart = () => setItems([]);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPoints = items.reduce((sum, i) => sum + i.quantity * i.pointsValue, 0);
+  const totalMemberPrice = items.reduce((sum, i) => sum + i.quantity * i.memberPrice, 0);
   const totalPrice = items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
 
-  const value = { items, addItem, updateQuantity, replaceItem, removeItem, clearCart, totalItems, totalPoints, totalPrice };
+  const value = { items, addItem, updateQuantity, replaceItem, removeItem, clearCart, totalItems, totalMemberPrice, totalPrice };
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 

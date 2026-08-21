@@ -23,6 +23,9 @@ router.get('/campaigns/:id', asyncHandler(async (req, res) => {
 }));
 router.post('/campaigns', asyncHandler(async (req, res) => res.status(201).json(await service.createCampaign(req.body, req.user.userId))));
 router.post('/campaigns/:id/send', asyncHandler(async (req, res) => res.json(await service.sendCampaign(req.params.id, req.user.userId))));
+router.post('/campaigns/:id/schedule', asyncHandler(async (req, res) =>
+  res.json(await service.scheduleCampaign(req.params.id, req.body.scheduledSendAt, req.user.userId))
+));
 router.put('/campaigns/:id', asyncHandler(async (req, res) => res.json(await service.updateCampaign(req.params.id, req.body, req.user.userId))));
 router.delete('/campaigns/:id', asyncHandler(async (req, res) => { await service.deleteCampaign(req.params.id, req.user.userId); res.status(204).end(); }));
 router.get('/email-log', asyncHandler(async (req, res) => res.json(await service.listEmailLog())));

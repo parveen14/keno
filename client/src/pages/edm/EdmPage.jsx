@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Tabs, Button, Typography, List, Tag, Space, Popconfirm, Empty, message } from 'antd';
-import { PlusOutlined, SendOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Tabs, Button, Typography, List, Tag, Space, Popconfirm, Empty, message, DatePicker } from 'antd';
+import { PlusOutlined, SendOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
 import DataTable from '../../components/DataTable.jsx';
@@ -16,6 +16,7 @@ export default function EdmPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'campaigns';
   const [selectedId, setSelectedId] = React.useState(null);
+  const [scheduleValue, setScheduleValue] = React.useState(null);
 
   const { data: campaigns, isLoading } = useQuery({ queryKey: ['edm-campaigns'], queryFn: () => api.get('/edm/campaigns').then((r) => r.data) });
   const { data: templates, isLoading: templatesLoading } = useQuery({ queryKey: ['edm-templates'], queryFn: () => api.get('/edm/templates').then((r) => r.data) });
@@ -48,6 +49,20 @@ export default function EdmPage() {
     onError: (e) => message.error(e.response?.data?.error || 'Failed to send'),
   });
 
+  React.useEffect(() => {
+    setScheduleValue(detail?.scheduled_send_at ? dayjs(detail.scheduled_send_at) : null);
+  }, [detail]);
+
+  const scheduleMutation = useMutation({
+    mutationFn: ({ id, scheduledSendAt }) => api.post(`/edm/campaigns/${id}/schedule`, { scheduledSendAt }),
+    onSuccess: () => {
+      message.success('Campaign scheduled');
+      queryClient.invalidateQueries({ queryKey: ['edm-campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['edm-campaign', selectedId] });
+    },
+    onError: (e) => message.error(e.response?.data?.error || 'Failed to schedule'),
+  });
+
   const deleteTemplateMutation = useMutation({
     mutationFn: (id) => api.delete(`/edm/templates/${id}`),
     onSuccess: () => {
@@ -63,6 +78,7 @@ export default function EdmPage() {
     { title: 'Audience', dataIndex: 'audience_type', render: (v) => AUDIENCE_LABEL[v] },
     { title: 'Recipients', dataIndex: 'recipient_count' },
     { title: 'Status', dataIndex: 'status', render: (v) => <StatusTag status={v} /> },
+    { title: 'Send Date & Time', dataIndex: 'scheduled_send_at', render: (v) => (v ? dayjs(v).format('DD MMM YYYY, HH:mm') : '—') },
     { title: 'Created', dataIndex: 'created_at', render: (v) => dayjs(v).format('DD MMM YYYY') },
     {
       title: '',
@@ -108,10 +124,40 @@ export default function EdmPage() {
                     <Typography.Paragraph type="secondary">Audience: {AUDIENCE_LABEL[detail.audience_type]}{detail.template_name ? ` · Template: ${detail.template_name}` : ''}</Typography.Paragraph>
                     <div dangerouslySetInnerHTML={{ __html: detail.body_html }} style={{ border: '1px solid #f0f0f0', padding: 12, marginBottom: 16 }} />
                     {detail.status !== 'SENT' && (
-                      <Button type="primary" icon={<SendOutlined />} onClick={() => sendMutation.mutate(detail.id)} loading={sendMutation.isPending}>
-                        Send now
-                      </Button>
+                      <Space>
+                        <Button type="primary" icon={<SendOutlined />} onClick={() => sendMutation.mutate(detail.id)} loading={sendMutation.isPending}>
+                          Send now
+                        </Button>
+                      </Space>
                     )}
+
+                    {detail.status !== 'SENT' && (
+                      <div style={{ marginTop: 16 }}>
+                        <Typography.Title level={5} style={{ marginBottom: 8 }}>Schedule send</Typography.Title>
+                        {detail.scheduled_send_at && (
+                          <Typography.Paragraph type="secondary">
+                            Currently scheduled for {dayjs(detail.scheduled_send_at).format('DD MMM YYYY, HH:mm')}
+                          </Typography.Paragraph>
+                        )}
+                        <Space>
+                          <DatePicker
+                            showTime
+                            format="DD MMM YYYY HH:mm"
+                            value={scheduleValue}
+                            onChange={setScheduleValue}
+                          />
+                          <Button
+                            icon={<ClockCircleOutlined />}
+                            disabled={!scheduleValue}
+                            loading={scheduleMutation.isPending}
+                            onClick={() => scheduleMutation.mutate({ id: detail.id, scheduledSendAt: scheduleValue.toISOString() })}
+                          >
+                            Schedule
+                          </Button>
+                        </Space>
+                      </div>
+                    )}
+
                     <Typography.Title level={5} style={{ marginTop: 16 }}>Recipients ({detail.recipients.length})</Typography.Title>
                     <List
                       dataSource={detail.recipients}

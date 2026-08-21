@@ -18,6 +18,9 @@ export default function PromotionFormPage() {
   const [form] = Form.useForm();
 
   const { data: types } = useQuery({ queryKey: ['promotion-types'], queryFn: () => api.get('/promotions/types').then((r) => r.data) });
+  // 'Standard Promotion' stays in the DB (existing promotions reference it), but is no longer
+  // offered for new promotions per client feedback -- hidden from the picker only.
+  const selectableTypes = types?.filter((t) => t.code !== 'STANDARD');
   const { data: jurisdictions } = useQuery({ queryKey: ['jurisdictions'], queryFn: () => api.get('/jurisdictions').then((r) => r.data) });
   const { data: kags } = useQuery({ queryKey: ['key-account-groups'], queryFn: () => api.get('/key-account-groups').then((r) => r.data) });
 
@@ -104,8 +107,8 @@ export default function PromotionFormPage() {
                 <Form.Item name="promotionTypeId" label="Promotion type" rules={[{ required: true }]}>
                   <Select
                     options={[
-                      { label: 'Keno Prize Campaigns', options: types?.filter((t) => t.prize_slots?.length).map((t) => ({ value: t.id, label: t.name })) },
-                      { label: 'Other', options: types?.filter((t) => !t.prize_slots?.length).map((t) => ({ value: t.id, label: t.name })) },
+                      { label: 'Keno Prize Campaigns', options: selectableTypes?.filter((t) => t.prize_slots?.length).map((t) => ({ value: t.id, label: t.name })) },
+                      { label: 'Other', options: selectableTypes?.filter((t) => !t.prize_slots?.length).map((t) => ({ value: t.id, label: t.name })) },
                     ]}
                   />
                 </Form.Item>

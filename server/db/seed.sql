@@ -158,7 +158,7 @@ FROM (VALUES
   ('contact_email', 'admin@keno-demo.example'),
   ('print_method', 'PRINTED_DELIVERED'),
   ('duration_weeks', '6'),
-  ('entry_mechanic', 'Every $50 wagered on Keno earns 1 entry'),
+  ('entry_mechanic', '$15'),
   ('draw_time', 'Monday 10:00 AM')
 ) AS v(field_key, value_text)
 JOIN template_fields tf ON tf.field_key = v.field_key
@@ -283,8 +283,8 @@ INSERT INTO prize_catalogue_items (sku, name, category, tier, unit_price) VALUES
   ('KATHMANDU-PUFFER-01', 'Embroidered Puffer Jacket', 'Apparel', 'Silver', 89.00),
   ('RMW-WEEKENDER-01', 'Leather Overnight Bag', 'Apparel', 'Gold', 199.00);
 
--- Points price defaults to 10 points per dollar (matches the loyalty-catalogue reference: "1,500 points - RRP $129.00").
-UPDATE prize_catalogue_items SET points_value = round(unit_price * 10);
+-- Member price defaults to 80% of RRP (always lower than unit_price); freight cost defaults to 5% of RRP.
+UPDATE prize_catalogue_items SET member_price = round(unit_price * 0.8, 2), freight_cost = round(unit_price * 0.05, 2);
 
 -- Prize picks for the "Ballarat Club Winter Prize Giveaway" demo prize campaign (inserted here,
 -- not alongside the promotion itself, since it needs prize_catalogue_items to already exist).
@@ -310,9 +310,9 @@ SELECT w.id, pci.id, 40, 0
 FROM warehouses w CROSS JOIN prize_catalogue_items pci
 WHERE pci.sku NOT IN ('LASER-PROJECTOR-01', 'RYOBI-DIY-01');
 
--- Portable Projector: low stock, no ETA needed (still available)
+-- Portable Projector: low stock (below the 5-unit low-stock threshold across all warehouses combined), no ETA needed (still available)
 INSERT INTO warehouse_stock (warehouse_id, prize_catalogue_item_id, soh_qty, committed_qty)
-SELECT w.id, (SELECT id FROM prize_catalogue_items WHERE sku='LASER-PROJECTOR-01'), 2, 0 FROM warehouses w;
+SELECT w.id, (SELECT id FROM prize_catalogue_items WHERE sku='LASER-PROJECTOR-01'), 1, 0 FROM warehouses w;
 
 -- Drone Starter Kit: out of stock with an ETA and a substitute -- UC8 low-stock/substitution demo
 INSERT INTO warehouse_stock (warehouse_id, prize_catalogue_item_id, soh_qty, committed_qty, restock_eta_date)

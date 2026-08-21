@@ -4,12 +4,7 @@ import dayjs from 'dayjs';
 import RichTextEditor from './RichTextEditor.jsx';
 import FileUploadField from './FileUploadField.jsx';
 
-const ENTRY_MECHANIC_PRESETS = [
-  'Every $50 wagered on Keno earns 1 entry',
-  'Every $100 wagered on Keno earns 1 entry',
-  'Automatic entry for all active members',
-  'Scan ticket in-venue to enter',
-];
+const ENTRY_MECHANIC_PRESETS = ['$10', '$15', '$20'];
 const DRAW_TIME_PRESETS = ['Monday 10:00 AM', 'Monday 2:00 PM', 'Friday 5:00 PM'];
 
 // Renders one antd Form.Item per promotion-type template field, keyed as fieldValues.<templateFieldId>
@@ -36,7 +31,7 @@ export default function DynamicTemplateFields({ fields = [] }) {
     if (f.field_key === 'entry_mechanic') {
       return (
         <Form.Item key={fieldId} name={name} label={f.label} rules={rules} initialValue={initialValue}>
-          <Select showSearch allowClear options={ENTRY_MECHANIC_PRESETS.map((v) => ({ value: v, label: v }))} placeholder="Select or type an entry mechanic" />
+          <Select allowClear options={ENTRY_MECHANIC_PRESETS.map((v) => ({ value: v, label: v }))} placeholder="Select an entry mechanic" />
         </Form.Item>
       );
     }

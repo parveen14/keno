@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Row, Col, Card, Button, Select, message, Typography, Table, Tag, Progress, Space, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import DataTable from '../../components/DataTable.jsx';
 
@@ -128,8 +128,17 @@ export default function VenueGroupsPage() {
             </div>
             <Table rowKey="id" size="small" pagination={false} columns={memberColumns} dataSource={detail.members} style={{ marginTop: 8 }} />
 
-            <Typography.Title level={5} style={{ marginTop: 16 }}>Group-level report</Typography.Title>
-            <Table rowKey="venue_code" size="small" pagination={false} columns={reportColumns} dataSource={report} />
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography.Title level={5} style={{ margin: 0 }}>Group-level report</Typography.Title>
+              <Button
+                size="small"
+                icon={<DownloadOutlined />}
+                onClick={() => window.open(`/api/venue-groups/${selectedId}/report/export.csv?token=${localStorage.getItem('keno_token')}`, '_blank')}
+              >
+                Export CSV
+              </Button>
+            </div>
+            <Table rowKey="venue_code" size="small" pagination={false} columns={reportColumns} dataSource={report} style={{ marginTop: 8 }} />
           </Card>
         </Col>
       )}

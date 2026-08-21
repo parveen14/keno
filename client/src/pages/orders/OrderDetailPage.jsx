@@ -82,7 +82,7 @@ export default function OrderDetailPage() {
     { title: 'Item', dataIndex: 'item_name' },
     { title: 'SKU', dataIndex: 'sku' },
     { title: 'Qty', dataIndex: 'quantity' },
-    { title: 'Points', dataIndex: 'points_value', render: (v) => (v == null ? '—' : Number(v).toLocaleString()) },
+    { title: 'Member price', dataIndex: 'member_price', render: (v) => (v == null ? '—' : `$${Number(v).toFixed(2)}`) },
     { title: 'Unit price', dataIndex: 'unit_price', render: (v) => `$${Number(v).toFixed(2)}` },
     { title: 'Status', render: (_, r) => <Tag color={ITEM_STATUS_COLOR[itemStatus(r)]}>{itemStatus(r)}</Tag> },
   ];

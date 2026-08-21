@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Row, Col, Card, Tabs, Button, Input, Space, message, Alert, Typography } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import api from '../../lib/api.js';
 import DataTable from '../../components/DataTable.jsx';
@@ -69,7 +70,23 @@ export default function ApprovalsPage() {
       <Tabs
         items={[
           { key: 'pending', label: `Pending (${pending?.length ?? 0})`, children: <DataTable columns={pendingColumns} data={pending} loading={isLoading} /> },
-          { key: 'report', label: 'Approval audit report', children: <DataTable columns={reportColumns} data={report} /> },
+          {
+            key: 'report',
+            label: 'Approval audit report',
+            children: (
+              <>
+                <div style={{ marginBottom: 12, textAlign: 'right' }}>
+                  <Button
+                    icon={<DownloadOutlined />}
+                    onClick={() => window.open(`/api/approvals/audit-report/export.csv?token=${localStorage.getItem('keno_token')}`, '_blank')}
+                  >
+                    Export
+                  </Button>
+                </div>
+                <DataTable columns={reportColumns} data={report} />
+              </>
+            ),
+          },
         ]}
       />
     </Card>

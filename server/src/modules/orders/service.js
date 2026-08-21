@@ -12,7 +12,7 @@ export async function listOrders({ venueId, status, keyAccountGroupId } = {}) {
     `SELECT o.*, v.name AS venue_name, kag.name AS key_account_group_name,
             (SELECT count(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count,
             (SELECT COALESCE(SUM(oi.quantity * oi.unit_price), 0) FROM order_items oi WHERE oi.order_id = o.id) AS subtotal,
-            (SELECT COALESCE(SUM(oi.quantity * oi.points_value), 0) FROM order_items oi WHERE oi.order_id = o.id) AS points_subtotal
+            (SELECT COALESCE(SUM(oi.quantity * oi.member_price), 0) FROM order_items oi WHERE oi.order_id = o.id) AS member_price_subtotal
      FROM orders o
      JOIN venues v ON v.id = o.venue_id
      LEFT JOIN key_account_groups kag ON kag.id = o.key_account_group_id
@@ -93,8 +93,8 @@ export async function createOrder(data, userId) {
     const warehouseStock = await pickWarehouse(line.itemId, line.quantity);
 
     const orderItem = (await query(
-      `INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, points_value, warehouse_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [orderRow.id, line.itemId, line.quantity, catalogueItem.unit_price, catalogueItem.points_value, warehouseStock?.warehouse_id ?? null]
+      `INSERT INTO order_items (order_id, prize_catalogue_item_id, quantity, unit_price, member_price, warehouse_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [orderRow.id, line.itemId, line.quantity, catalogueItem.unit_price, catalogueItem.member_price, warehouseStock?.warehouse_id ?? null]
     )).rows[0];
 
     if (warehouseStock) {

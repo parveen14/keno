@@ -1,6 +1,8 @@
 import { query } from '../../lib/db.js';
 import { writeAuditLog } from '../../lib/auditLog.js';
 
+const csvEscape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
 export async function listVenueGroups() {
   const { rows } = await query(
     `SELECT vg.*, p.name AS promotion_name,
@@ -115,4 +117,13 @@ export async function groupReport(id) {
     [id]
   );
   return rows;
+}
+
+export async function exportGroupReportCsv(id) {
+  const rows = await groupReport(id);
+  const header = 'Venue,Eligibility,Orders,Fulfilment status\n';
+  const body = rows
+    .map((r) => [r.venue_name, r.eligibility_status, r.order_count, r.fulfilment_status].map(csvEscape).join(','))
+    .join('\n');
+  return header + body;
 }

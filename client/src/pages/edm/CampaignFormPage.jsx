@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, Form, Input, Select, Button, Space, Row, Col, message, Alert } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UploadOutlined } from '@ant-design/icons';
 import api from '../../lib/api.js';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
 import { FormSection } from '../../components/FormSection.jsx';
@@ -126,7 +126,7 @@ export default function CampaignFormPage() {
             <Select allowClear placeholder="Optional — loads subject & body from the template" onChange={applyTemplate} options={templates?.map((t) => ({ value: t.id, label: t.name }))} />
           </Form.Item>
           <Form.Item name="subject" label="Subject" rules={[{ required: true }]}><Input /></Form.Item>
-          <Row gutter={16}>
+          <Row gutter={16} align="bottom">
             <Col span={12}>
               <Form.Item name="audienceType" label="Audience" rules={[{ required: true }]}>
                 <Select options={Object.entries(AUDIENCE_LABEL).map(([value, label]) => ({ value, label }))} />
@@ -140,6 +140,9 @@ export default function CampaignFormPage() {
               </Col>
             )}
           </Row>
+          <Form.Item>
+            <Button icon={<UploadOutlined />}>Import audience</Button>
+          </Form.Item>
         </FormSection>
 
         <FormSection title="Message content">

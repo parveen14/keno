@@ -7,7 +7,6 @@ import api from '../../lib/api.js';
 import { useCart } from '../../cart/CartContext.jsx';
 
 const LOW_STOCK_THRESHOLD = 5;
-const TIER_COLOR = { Bronze: '#a1662f', Silver: '#8c8c8c', Gold: '#d4af37', Platinum: '#5b8def' };
 
 export default function CatalogueItemPage() {
   const { id } = useParams();
@@ -75,12 +74,12 @@ export default function CatalogueItemPage() {
 
           <Space size={4} wrap style={{ marginBottom: 16 }}>
             <Tag>{item.category}</Tag>
-            <Tag color={TIER_COLOR[item.tier]}>{item.tier}</Tag>
           </Space>
 
           <div style={{ marginBottom: 12 }}>
-            <Typography.Title level={2} style={{ margin: 0 }}>{Number(item.points_value).toLocaleString()} pts</Typography.Title>
-            <Typography.Text type="secondary">RRP ${Number(item.unit_price).toFixed(2)}</Typography.Text>
+            <Typography.Title level={2} style={{ margin: 0 }}>${Number(item.member_price).toFixed(2)}</Typography.Title>
+            <Typography.Text type="secondary" style={{ display: 'block' }}>RRP ${Number(item.unit_price).toFixed(2)}</Typography.Text>
+            <Typography.Text type="secondary">Freight ${Number(item.freight_cost).toFixed(2)}</Typography.Text>
           </div>
 
           <div style={{ marginBottom: 16 }}>
@@ -120,19 +119,21 @@ export default function CatalogueItemPage() {
                       : `Only ${availableQty} left in stock right now.`}
                   </Typography.Text>
 
-                  <div>
-                    <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>(a) Place the order anyway</Typography.Text>
-                    <Button
-                      icon={<ShoppingCartOutlined />}
-                      onClick={() => handleAddToCart()}
-                    >
-                      Add to cart anyway ({quantity} · limited stock)
-                    </Button>
-                  </div>
+                  {isLow && (
+                    <div>
+                      <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>Place the order anyway</Typography.Text>
+                      <Button
+                        icon={<ShoppingCartOutlined />}
+                        onClick={() => handleAddToCart()}
+                      >
+                        Add to cart anyway ({quantity} · limited stock)
+                      </Button>
+                    </div>
+                  )}
 
                   {item.substitutes?.length > 0 && (
                     <div>
-                      <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>(b) View alternative options</Typography.Text>
+                      <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>View alternative options</Typography.Text>
                       <Button onClick={() => navigate(`/catalogue/${id}/substitute`)}>
                         View substitution options
                       </Button>
@@ -140,7 +141,7 @@ export default function CatalogueItemPage() {
                   )}
 
                   <div>
-                    <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>(c) Wait for restock</Typography.Text>
+                    <Typography.Text strong style={{ display: 'block', marginBottom: 4 }}>Wait for restock</Typography.Text>
                     <Typography.Text type="secondary">
                       {etaText
                         ? `We'll have more in stock by ${etaText} -- no action needed, check back then.`

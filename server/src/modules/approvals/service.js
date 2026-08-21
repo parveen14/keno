@@ -1,6 +1,8 @@
 import { query } from '../../lib/db.js';
 import { writeAuditLog } from '../../lib/auditLog.js';
 
+const csvEscape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
 export async function listApprovals({ status } = {}) {
   const clauses = [];
   const params = [];
@@ -64,4 +66,13 @@ export async function auditReport() {
      ORDER BY a.created_at DESC`
   );
   return rows;
+}
+
+export async function exportAuditReportCsv() {
+  const rows = await auditReport();
+  const header = 'Promotion,Version,Jurisdiction,Status,Approver,Reason,Decided\n';
+  const body = rows
+    .map((r) => [r.promotion_name, r.version_number, r.jurisdiction_name, r.status, r.approver_name, r.reason, r.decided_at?.toISOString?.() ?? r.decided_at].map(csvEscape).join(','))
+    .join('\n');
+  return header + body;
 }
