@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Typography, Row, Col } from 'antd';
-import { RightOutlined } from '@ant-design/icons';
+import { RightOutlined, PlaySquareOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { visibleNavItems } from '../../layout/navConfig.js';
@@ -36,6 +36,28 @@ export default function DashboardPage() {
         <Typography.Text type="secondary" style={{ position: 'relative' }}>
           Signed in as {user?.role}. Pick a module below to walk through each of the 12 RFP use cases.
         </Typography.Text>
+      </Card>
+
+      <Card
+        hoverable
+        onClick={() => navigate('/use-case-slides')}
+        style={{ marginBottom: 28 }}
+        styles={{ body: { display: 'flex', alignItems: 'center', gap: 14, padding: 20 } }}
+      >
+        <div style={{
+          width: 48, height: 48, borderRadius: 10, flexShrink: 0,
+          background: 'linear-gradient(135deg, #00aeef, #0060ac)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <PlaySquareOutlined style={{ color: '#fff', fontSize: 22 }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Typography.Text strong style={{ display: 'block' }}>Use Case Slides</Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 2, lineHeight: 1.4 }}>
+            Slide-by-slide summary of all 12 RFP use cases, from the RFP presentation deck.
+          </Typography.Text>
+        </div>
+        <RightOutlined style={{ color: '#CBD5E1', fontSize: 13, flexShrink: 0 }} />
       </Card>
 
       {moduleGroups.map((group) => (

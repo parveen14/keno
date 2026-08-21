@@ -1,7 +1,9 @@
 // Flat list of every module, ordered ascending by use-case number. `uc: 0` is the dashboard
 // itself (not one of the 12 RFP use cases); UC8 has two entries (Prize Catalogue + Orders &
-// Delivery) since that use case covers both screens.
+// Delivery) since that use case covers both screens. `uc: -1` is the RFP slide-deck summary --
+// not a use case itself, so it's pinned above Overview at the top of the sidebar.
 export const navItems = [
+  { key: '/use-case-slides', label: 'Use Case Slides', description: 'Slide-by-slide summary of all 12 RFP use cases.', uc: -1 },
   { key: '/', label: 'Overview', uc: 0 },
   { key: '/content', label: 'Content Scheduling (UC1)', description: 'Schedule and manage content across venues and channels.', uc: 1 },
   { key: '/edm', label: 'EDM / Newsletters (UC2)', description: 'Create and send targeted emails and newsletters.', uc: 2 },

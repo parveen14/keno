@@ -42,6 +42,7 @@ import ReportingPage from './pages/reporting/ReportingPage.jsx';
 import SupportRequestFormPage from './pages/reporting/SupportRequestFormPage.jsx';
 import VenueDetailPage from './pages/venues/VenueDetailPage.jsx';
 import PublicExplorerPage from './pages/public/PublicExplorerPage.jsx';
+import UseCaseSlidesPage from './pages/useCaseSlides/UseCaseSlidesPage.jsx';
 
 export default function App() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
         }
       >
         <Route index element={<DashboardPage />} />
+        <Route path="use-case-slides" element={<UseCaseSlidesPage />} />
         <Route path="promotions" element={<PromotionsPage />} />
         <Route path="promotions/new" element={<PromotionFormPage />} />
         <Route path="promotions/:id/edit" element={<PromotionFormPage />} />
