@@ -20,6 +20,7 @@ import CampaignFormPage from './pages/edm/CampaignFormPage.jsx';
 import TemplateFormPage from './pages/edm/TemplateFormPage.jsx';
 import KeyAccountsPage from './pages/keyAccounts/KeyAccountsPage.jsx';
 import KeyAccountGroupFormPage from './pages/keyAccounts/KeyAccountGroupFormPage.jsx';
+import PromotionParticipationPage from './pages/keyAccounts/PromotionParticipationPage.jsx';
 import CataloguePage from './pages/catalogue/CataloguePage.jsx';
 import CatalogueItemFormPage from './pages/catalogue/CatalogueItemFormPage.jsx';
 import CatalogueItemPage from './pages/catalogue/CatalogueItemPage.jsx';
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="key-accounts" element={<KeyAccountsPage />} />
         <Route path="key-accounts/new" element={<KeyAccountGroupFormPage />} />
         <Route path="key-accounts/:id/edit" element={<KeyAccountGroupFormPage />} />
+        <Route path="key-accounts/:id/promotions/:promotionId/report" element={<PromotionParticipationPage />} />
         <Route path="catalogue" element={<CataloguePage />} />
         <Route path="catalogue/new" element={<CatalogueItemFormPage />} />
         <Route path="catalogue/:id/edit" element={<CatalogueItemFormPage />} />

@@ -28,6 +28,42 @@ router.get('/:id/promotions', asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
+// Per-venue participation and order status for one promotion, scoped to this group's venues --
+// there's no explicit opt-in/eligibility record for key-account promotions (unlike UC3's
+// venue_group_members.eligibility_status), so "participation" is inferred from whether the venue
+// has placed any order against this promotion.
+router.get('/:id/promotions/:promotionId/report', asyncHandler(async (req, res) => {
+  const { rows } = await query(
+    `SELECT v.id AS venue_id, v.name AS venue_name, v.code AS venue_code,
+            COALESCE((SELECT count(*) FROM orders o WHERE o.venue_id = v.id AND o.promotion_id = $2), 0) AS order_count,
+            COALESCE((SELECT string_agg(DISTINCT o.status, ', ') FROM orders o WHERE o.venue_id = v.id AND o.promotion_id = $2), '—') AS fulfilment_status
+     FROM venues v
+     WHERE v.key_account_group_id = $1
+     ORDER BY v.name`,
+    [req.params.id, req.params.promotionId]
+  );
+  res.json(rows.map((r) => ({ ...r, participated: Number(r.order_count) > 0 })));
+}));
+
+const csvEscape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+router.get('/:id/promotions/:promotionId/report/export.csv', asyncHandler(async (req, res) => {
+  const { rows } = await query(
+    `SELECT v.name AS venue_name, v.code AS venue_code,
+            COALESCE((SELECT count(*) FROM orders o WHERE o.venue_id = v.id AND o.promotion_id = $2), 0) AS order_count,
+            COALESCE((SELECT string_agg(DISTINCT o.status, ', ') FROM orders o WHERE o.venue_id = v.id AND o.promotion_id = $2), '—') AS fulfilment_status
+     FROM venues v
+     WHERE v.key_account_group_id = $1
+     ORDER BY v.name`,
+    [req.params.id, req.params.promotionId]
+  );
+  const header = 'Venue,Code,Participated,Orders,Order Status\n';
+  const body = rows
+    .map((r) => [r.venue_name, r.venue_code, Number(r.order_count) > 0 ? 'Yes' : 'No', r.order_count, r.fulfilment_status].map(csvEscape).join(','))
+    .join('\n');
+  res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="promotion-participation-report.csv"').send(header + body);
+}));
+
 // Each venue belongs to at most one key account group (venues.key_account_group_id is a plain
 // FK, not a join table). This is a full sync from the add/edit group form's multi-select: any
 // venue not in venueIds is unassigned, any venue in venueIds is (re)assigned to this group.

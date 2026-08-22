@@ -90,7 +90,11 @@ export default function KeyAccountsPage() {
     },
   ];
   const promotionColumns = [
-    { title: 'Promotion', dataIndex: 'name', render: (v) => <strong>{v}</strong> },
+    {
+      title: 'Promotion',
+      dataIndex: 'name',
+      render: (v, r) => <a onClick={() => navigate(`/key-accounts/${selectedId}/promotions/${r.id}/report`)}>{v}</a>,
+    },
     { title: 'Type', dataIndex: 'promotion_type_name' },
     { title: 'Status', dataIndex: 'status', render: (v) => <StatusTag status={v} /> },
     { title: 'Window', render: (_, r) => `${dayjs(r.start_date).format('DD MMM')} – ${dayjs(r.end_date).format('DD MMM YY')}` },
