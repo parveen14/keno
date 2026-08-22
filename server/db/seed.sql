@@ -89,7 +89,6 @@ FROM promotion_types pt
 CROSS JOIN (VALUES
   ('contact_email', 'Contact Email', 'TEXT', true, NULL, 1),
   ('print_method', 'Print Method', 'TEXT', true, 'SELF_PRINT', 2),
-  ('duration_weeks', 'Duration (weeks)', 'NUMBER', true, '4', 3),
   ('entry_mechanic', 'Entry Mechanic', 'TEXT', true, NULL, 4),
   ('draw_time', 'Draw Time', 'TEXT', true, NULL, 5),
   ('venue_logo_url', 'Venue Logo', 'IMAGE', false, NULL, 6),
@@ -157,7 +156,6 @@ SELECT (SELECT id FROM promotions WHERE name='Ballarat Club Winter Prize Giveawa
 FROM (VALUES
   ('contact_email', 'admin@keno-demo.example'),
   ('print_method', 'PRINTED_DELIVERED'),
-  ('duration_weeks', '6'),
   ('entry_mechanic', '$15'),
   ('draw_time', 'Monday 10:00 AM')
 ) AS v(field_key, value_text)

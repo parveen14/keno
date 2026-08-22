@@ -57,7 +57,6 @@ export default function ContentItemFormPage() {
         bodyHtml: existing.body_html,
         fileUrl: existing.file_url,
         thumbnailUrl: existing.thumbnail_url,
-        jurisdictionId: existing.jurisdiction_id,
         isComplianceLocked: existing.is_compliance_locked,
       });
     }
@@ -155,53 +154,50 @@ export default function ContentItemFormPage() {
         )}
       </FormSection>
 
-      <FormSection title="Compliance & visibility">
-        <Form.Item name="jurisdictionId" label="Jurisdiction" style={{ maxWidth: 360 }}>
-          <Select allowClear options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
-        </Form.Item>
+      {!isEdit && (
+        <FormSection title="Schedule (optional)">
+          <Typography.Paragraph type="secondary" style={{ marginTop: -4 }}>
+            Target this content to a venue, key account group, jurisdiction or channel right away, or leave blank and schedule it later.
+          </Typography.Paragraph>
+          <Form.Item name="scheduleTargetType" label="Target">
+            <Select allowClear options={Object.entries(TARGET_LABEL).map(([value, label]) => ({ value, label }))} />
+          </Form.Item>
+          {scheduleTargetType === 'VENUE' && (
+            <Form.Item name="scheduleVenueId" label="Venue" rules={[{ required: true }]}>
+              <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
+            </Form.Item>
+          )}
+          {scheduleTargetType === 'KEY_ACCOUNT_GROUP' && (
+            <Form.Item name="scheduleKeyAccountGroupId" label="Key account group" rules={[{ required: true }]}>
+              <Select options={kags?.map((k) => ({ value: k.id, label: k.name }))} />
+            </Form.Item>
+          )}
+          {scheduleTargetType === 'JURISDICTION' && (
+            <Form.Item name="scheduleJurisdictionId" label="Jurisdiction" rules={[{ required: true }]}>
+              <Select options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
+            </Form.Item>
+          )}
+          {scheduleTargetType === 'CHANNEL' && (
+            <Form.Item name="scheduleChannelId" label="Channel" rules={[{ required: true }]}>
+              <Select options={channels?.map((c) => ({ value: c.id, label: c.name }))} />
+            </Form.Item>
+          )}
+          <Form.Item
+            name="scheduleDates"
+            label="Valid window"
+            rules={[{ required: !!scheduleTargetType, message: 'Select a schedule window' }]}
+          >
+            <DatePicker.RangePicker style={{ width: '100%' }} />
+          </Form.Item>
+        </FormSection>
+      )}
+
+      <FormSection>
         <Form.Item name="isComplianceLocked" valuePropName="checked">
           <Checkbox>Lock as mandatory compliance content</Checkbox>
         </Form.Item>
       </FormSection>
     </>
-  );
-
-  const newScheduleFields = (
-    <FormSection first title="Schedule (optional)">
-      <Typography.Paragraph type="secondary" style={{ marginTop: -4 }}>
-        Target this content to a venue, key account group, jurisdiction or channel right away, or leave blank and schedule it later.
-      </Typography.Paragraph>
-      <Form.Item name="scheduleTargetType" label="Target">
-        <Select allowClear options={Object.entries(TARGET_LABEL).map(([value, label]) => ({ value, label }))} />
-      </Form.Item>
-      {scheduleTargetType === 'VENUE' && (
-        <Form.Item name="scheduleVenueId" label="Venue" rules={[{ required: true }]}>
-          <Select showSearch optionFilterProp="label" options={venues?.map((v) => ({ value: v.id, label: v.name }))} />
-        </Form.Item>
-      )}
-      {scheduleTargetType === 'KEY_ACCOUNT_GROUP' && (
-        <Form.Item name="scheduleKeyAccountGroupId" label="Key account group" rules={[{ required: true }]}>
-          <Select options={kags?.map((k) => ({ value: k.id, label: k.name }))} />
-        </Form.Item>
-      )}
-      {scheduleTargetType === 'JURISDICTION' && (
-        <Form.Item name="scheduleJurisdictionId" label="Jurisdiction" rules={[{ required: true }]}>
-          <Select options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
-        </Form.Item>
-      )}
-      {scheduleTargetType === 'CHANNEL' && (
-        <Form.Item name="scheduleChannelId" label="Channel" rules={[{ required: true }]}>
-          <Select options={channels?.map((c) => ({ value: c.id, label: c.name }))} />
-        </Form.Item>
-      )}
-      <Form.Item
-        name="scheduleDates"
-        label="Valid window"
-        rules={[{ required: !!scheduleTargetType, message: 'Select a schedule window' }]}
-      >
-        <DatePicker.RangePicker style={{ width: '100%' }} />
-      </Form.Item>
-    </FormSection>
   );
 
   const existingSchedules = (
@@ -293,15 +289,8 @@ export default function ContentItemFormPage() {
           </div>
         </div>
       ) : (
-        <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)}>
-          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            <div style={{ flex: '1 1 420px', maxWidth: 680 }}>
-              {itemFields}
-            </div>
-            <div style={{ flex: '1 1 300px', maxWidth: 360 }}>
-              {newScheduleFields}
-            </div>
-          </div>
+        <Form layout="vertical" form={form} onFinish={(v) => saveMutation.mutate(v)} style={{ maxWidth: 680 }}>
+          {itemFields}
         </Form>
       )}
     </Card>

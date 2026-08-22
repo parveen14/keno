@@ -192,7 +192,9 @@ export async function sendCampaign(id, userId) {
       [id, venue.contact_email, resolvedSubject, resolvedBody, venue.contact_email, `SF-CAMPAIGN-${id.slice(0, 8)}`, JSON.stringify({ venueId: venue.id, venueName: venue.name })]
     );
   }
-  const { rows } = await query(`UPDATE edm_campaigns SET status = 'SENT' WHERE id = $1 RETURNING *`, [id]);
+  // "Send now" always stamps the actual send time here, even for a campaign that had an earlier
+  // scheduled_send_at -- once sent, this column should reflect when it really went out.
+  const { rows } = await query(`UPDATE edm_campaigns SET status = 'SENT', scheduled_send_at = now() WHERE id = $1 RETURNING *`, [id]);
   await writeAuditLog({ tableName: 'edm_campaigns', recordId: id, action: 'UPDATE', changedBy: userId, newData: { status: 'SENT', recipientCount: venues.length } });
   return getCampaign(id);
 }

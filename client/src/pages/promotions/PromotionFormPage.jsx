@@ -60,6 +60,7 @@ export default function PromotionFormPage() {
         name: values.name,
         description: values.description,
         jurisdictionId: values.jurisdictionId,
+        keyAccountGroupId: values.keyAccountGroupId,
         startDate: values.dates[0].format('YYYY-MM-DD'),
         endDate: values.dates[1].format('YYYY-MM-DD'),
         fieldValues: serializeFieldValues(values.fieldValues, type?.fields),
@@ -68,7 +69,6 @@ export default function PromotionFormPage() {
       if (isEdit) {
         return api.put(`/promotions/${id}`, {
           ...payload,
-          keyAccountGroupId: values.keyAccountGroupId,
           changeReason: values.changeReason || 'Promotion details edited',
         });
       }
@@ -119,13 +119,11 @@ export default function PromotionFormPage() {
                 <Select allowClear options={jurisdictions?.map((j) => ({ value: j.id, label: j.name }))} />
               </Form.Item>
             </Col>
-            {isEdit && (
-              <Col span={12}>
-                <Form.Item name="keyAccountGroupId" label="Key account group">
-                  <Select allowClear options={kags?.map((k) => ({ value: k.id, label: k.name }))} />
-                </Form.Item>
-              </Col>
-            )}
+            <Col span={12}>
+              <Form.Item name="keyAccountGroupId" label="Key account group">
+                <Select allowClear options={kags?.map((k) => ({ value: k.id, label: k.name }))} />
+              </Form.Item>
+            </Col>
           </Row>
           <Form.Item name="description" label="Description"><RichTextEditor placeholder="Describe the promotion..." /></Form.Item>
         </FormSection>
